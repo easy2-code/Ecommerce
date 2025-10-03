@@ -1,0 +1,50 @@
+Step 1: Initialize backend
+
+:) npm init -y
+
+
+Step 2: Install packages one by one
+
+1️⃣ bcryptjs (for password hashing)
+
+:) npm i bcryptjs
+
+2️⃣ cloudinary (for image upload & storage)
+
+:) npm i cloudinary
+
+3️⃣ cookie-parser (to read cookies)
+
+:) npm i cookie-parser
+
+4️⃣ cors (to connect frontend & backend safely)
+
+:) npm i cors
+
+5️⃣ dotenv (to use `.env` file for secrets)
+
+:) npm i dotenv
+
+6️⃣ express (backend framework)
+
+:) npm i express
+
+7️⃣ jsonwebtoken (JWT) (authentication tokens)
+
+:) npm i jsonwebtoken
+
+8️⃣ mongoose (MongoDB connection & models)
+
+:) npm install mongodb
+:) npm i mongoose
+
+9️⃣ multer (file uploads e.g. product images)
+
+:) npm i multer
+
+🔟 nodemon (for auto-restart during development — install as dev dependency)
+
+:) npm install --save-dev nodemon
+
+
+

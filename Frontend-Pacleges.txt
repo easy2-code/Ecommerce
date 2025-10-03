@@ -1,0 +1,46 @@
+1️⃣ react-router-dom
+
+👉 For navigation between pages (Home, Product, Cart, SignIn, etc.) in your React app.
+
+:) npm i react-router-dom
+
+Example: import { BrowserRouter, Routes, Route } from "react-router-dom";
+
+
+2️⃣ @reduxjs/toolkit
+
+👉 Helps manage global state (cart items, user authentication, products). It’s the modern way to use Redux (simpler and less boilerplate).
+
+:) npm i @reduxjs/toolkit
+
+3️⃣ react-redux
+
+👉 Connects React with Redux Toolkit. Without this, your React components cannot talk to Redux store.
+
+:) npm i react-redux
+
+Example: import { Provider } from "react-redux";
+
+4️⃣ axios
+
+👉 For making HTTP requests (frontend → backend). Much easier than fetch. You’ll use it to call your API (`http://localhost:5000/api/...`).
+
+:) npm i axios
+
+📦 axios
+
+It’s a library that helps your frontend (React) talk to your backend (Express).
+
+Without it, you would use fetch, but axios is simpler, cleaner, and more powerful.
+
+You’ll use it to send requests like:
+
+    Get all products 🛒
+
+    Post login data 🔑
+
+    Add items to cart 🛍️
+
+5️⃣ Install Tailwind CSS using Vite
+
+Link: https://tailwindcss.com/docs/installation/using-vite
