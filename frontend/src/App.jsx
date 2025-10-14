@@ -6,6 +6,8 @@ import AuthLayout from "./components/auth/AuthLayout";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 
+import Home from "./pages/home";
+
 // Admin
 import AdminLayout from "./components/admin-view/AdminLayout";
 import AdminDashboard from "./pages/admin-view/AdminDashboard";
@@ -27,15 +29,20 @@ import UnAuth from "./pages/UnAuth/UnAuth";
 
 export default function App() {
   // For now, we keep hardcoded values (we’ll later connect these from Redux)
-  const isAuthenticated = true;
-  const user = {
-    name: "tayyab",
-    role: "admin",
-  };
+  const isAuthenticated = false;
+  const user = null;
+
+  // const isAuthenticated = true;
+  // const user = {
+  //   name: "tayyab",
+  //   role: "admin",
+  // };
 
   return (
     <div className="flex flex-col overflow-hidden bg-white">
       <Routes>
+        <Route path="/" element={<Home />} />
+
         {/* Auth Routes */}
         <Route
           path="/auth"
