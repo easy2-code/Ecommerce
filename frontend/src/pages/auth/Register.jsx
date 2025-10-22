@@ -21,20 +21,27 @@ export default function Register() {
 
   function onSubmit(event) {
     event.preventDefault();
+
+    // ✅ Client-side validation
+    if (!formData.userName || !formData.email || !formData.password) {
+      toast.error("All fields are required ❌");
+      return;
+    }
+
     setLoading(true);
-    dispatch(registerUser(formData)).then((data) => {
-      setLoading(false);
-      if (data.payload?.success) {
+    dispatch(registerUser(formData))
+      .unwrap() // ✅ unwrap gives you the payload or throws error
+      .then((data) => {
         toast.success("Registration Successful 🎉", {
           description: "You can now log in to your account.",
         });
         navigate("/auth/login");
-      } else {
-        toast.error("Registration Failed ❌", {
-          description: data.payload?.message || "Something went wrong.",
-        });
-      }
-    });
+      })
+      .catch((errorMessage) => {
+        // ✅ Show server-side error message
+        toast.error(errorMessage || "Registration Failed ❌");
+      })
+      .finally(() => setLoading(false));
   }
 
   return (
