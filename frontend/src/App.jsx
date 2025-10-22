@@ -26,17 +26,10 @@ import ShoppingAccount from "./pages/shopping-view/ShoppingAccount";
 import NotFound from "./pages/not-found/NotFound";
 import CheckAuth from "./components/common/CheckAuth";
 import UnAuth from "./pages/UnAuth/UnAuth";
+import { useSelector } from "react-redux";
 
 export default function App() {
-  // For now, we keep hardcoded values (we’ll later connect these from Redux)
-  const isAuthenticated = false;
-  const user = null;
-
-  // const isAuthenticated = true;
-  // const user = {
-  //   name: "tayyab",
-  //   role: "admin",
-  // };
+  const { isAuthenticated, user } = useSelector((state) => state.auth);
 
   return (
     <div className="flex flex-col overflow-hidden bg-white">

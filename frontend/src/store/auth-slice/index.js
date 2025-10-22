@@ -7,34 +7,27 @@ const initialState = {
   error: null,
 };
 
+// --------------------- REGISTER USER ---------------------
 export const registerUser = createAsyncThunk(
   "auth/registerUser",
   async (formData, { rejectWithValue }) => {
     try {
-      console.log("🔄 Sending registration request...", formData);
-
       const response = await fetch("http://localhost:3000/api/auth/register", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
 
-      // console.log("📡 Response status:", response.status);
-
       const data = await response.json();
-      // console.log("📡 Response data:", data);
 
       if (!response.ok) {
         return rejectWithValue(
           data.message || `HTTP error! status: ${response.status}`
         );
       }
-      console.log(`✅ User "${data.user.userName}" registered successfully!`);
+
       return data;
     } catch (error) {
-      console.error("❌ Fetch error:", error);
       return rejectWithValue(
         error.message || "Network error - cannot connect to server"
       );
@@ -42,6 +35,36 @@ export const registerUser = createAsyncThunk(
   }
 );
 
+// --------------------- LOGIN USER ---------------------
+export const loginUser = createAsyncThunk(
+  "auth/login",
+  async (formData, { rejectWithValue }) => {
+    try {
+      const response = await fetch("http://localhost:3000/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+        credentials: "include", // ✅ include cookies
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        return rejectWithValue(
+          data.message || `HTTP error! status: ${response.status}`
+        );
+      }
+
+      return data;
+    } catch (error) {
+      return rejectWithValue(
+        error.message || "Network error - cannot connect to server"
+      );
+    }
+  }
+);
+
+// --------------------- SLICE ---------------------
 const authSlice = createSlice({
   name: "auth",
   initialState,
@@ -53,8 +76,13 @@ const authSlice = createSlice({
     clearError: (state) => {
       state.error = null;
     },
+    logoutUser: (state) => {
+      state.user = null;
+      state.isAuthenticated = false;
+    },
   },
   extraReducers: (builder) => {
+    // -------- REGISTER --------
     builder
       .addCase(registerUser.pending, (state) => {
         state.isLoading = true;
@@ -63,10 +91,25 @@ const authSlice = createSlice({
       .addCase(registerUser.fulfilled, (state, action) => {
         state.isLoading = false;
         state.user = action.payload.user;
-        state.isAuthenticated = false;
-        state.error = null;
+        state.isAuthenticated = false; // still false until login
       })
       .addCase(registerUser.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
+      });
+
+    // -------- LOGIN --------
+    builder
+      .addCase(loginUser.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(loginUser.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.user = action.payload.user;
+        state.isAuthenticated = true;
+      })
+      .addCase(loginUser.rejected, (state, action) => {
         state.isLoading = false;
         state.user = null;
         state.isAuthenticated = false;
@@ -75,5 +118,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { setUser, clearError } = authSlice.actions;
+export const { setUser, clearError, logoutUser } = authSlice.actions;
 export default authSlice.reducer;
