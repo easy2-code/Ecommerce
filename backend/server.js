@@ -1,25 +1,25 @@
-// 🚀 Import required packages
-const express = require("express");
-const mongoose = require("mongoose");
-const cookieParser = require("cookie-parser");
-const cors = require("cors");
-require("dotenv").config();
+import express from "express";
+import mongoose from "mongoose";
+import cookieParser from "cookie-parser";
+import cors from "cors";
+import dotenv from "dotenv";
+import authRouter from "./routes/auth/auth.route.js";
 
-// 🛢️ Connect to MongoDB
+dotenv.config();
+
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => console.log("✅ MongoDB Connected.."))
   .catch((error) => console.log("❌ DB Error:", error));
 
-// ⚙️ Initialize Express app
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 3000;
 
-// 🌐 CORS Middleware (Allow Frontend -> Backend requests)
+// ✅ Use official CORS middleware
 app.use(
   cors({
     origin: "http://localhost:5173",
-    methods: ["GET", "POST", "DELETE", "PUT"],
+    methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: [
       "Content-Type",
       "Authorization",
@@ -31,11 +31,17 @@ app.use(
   })
 );
 
-// 🍪 Middleware
 app.use(cookieParser());
 app.use(express.json());
 
-// ▶️ Start Server
+// Routes
+app.use("/api/auth", authRouter);
+
+// Test route
+app.get("/", (req, res) => {
+  res.send("Backend is working ✅");
+});
+
 app.listen(PORT, () =>
   console.log(`🚀 Server running on http://localhost:${PORT}`)
 );

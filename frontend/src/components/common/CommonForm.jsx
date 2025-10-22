@@ -1,10 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Select, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Textarea } from "../ui/textarea";
 import { SelectContent } from "@radix-ui/react-select";
 import { Button } from "../ui/button";
+import { EyeIcon, EyeOffIcon } from "lucide-react"; // icons for password toggle
 
 export default function CommonForm({
   formControls,
@@ -12,28 +13,63 @@ export default function CommonForm({
   setFormData,
   onSubmit,
   buttonText,
+  disabled,
 }) {
+  const [showPassword, setShowPassword] = useState(false); // track password visibility
+
   function renderInputsByComponentType(getControlItem) {
     let element = null;
     const value = formData[getControlItem.name] || "";
 
     switch (getControlItem.componentType) {
       case "input":
-        element = (
-          <Input
-            name={getControlItem.name}
-            placeholder={getControlItem.placeholder}
-            id={getControlItem.name}
-            type={getControlItem.type}
-            value={value}
-            onChange={(event) =>
-              setFormData({
-                ...formData,
-                [getControlItem.name]: event.target.value,
-              })
-            }
-          />
-        );
+        // Password input with eye toggle
+        if (getControlItem.type === "password") {
+          element = (
+            <div className="relative w-full">
+              <Input
+                name={getControlItem.name}
+                placeholder={getControlItem.placeholder}
+                id={getControlItem.name}
+                type={showPassword ? "text" : "password"}
+                value={value}
+                onChange={(event) =>
+                  setFormData({
+                    ...formData,
+                    [getControlItem.name]: event.target.value,
+                  })
+                }
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-900"
+              >
+                {showPassword ? (
+                  <EyeOffIcon className="w-5 h-5" />
+                ) : (
+                  <EyeIcon className="w-5 h-5" />
+                )}
+              </button>
+            </div>
+          );
+        } else {
+          element = (
+            <Input
+              name={getControlItem.name}
+              placeholder={getControlItem.placeholder}
+              id={getControlItem.name}
+              type={getControlItem.type}
+              value={value}
+              onChange={(event) =>
+                setFormData({
+                  ...formData,
+                  [getControlItem.name]: event.target.value,
+                })
+              }
+            />
+          );
+        }
         break;
       case "select":
         element = (
@@ -108,7 +144,7 @@ export default function CommonForm({
         ))}
       </div>
 
-      <Button type="submit" className="mt-4 w-full">
+      <Button type="submit" disabled={disabled} className="mt-4 w-full">
         {buttonText || "Submit"}
       </Button>
     </form>
