@@ -5,15 +5,11 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-// Register User function
+// -------------------- REGISTER --------------------
 export const registerUser = async (req, res) => {
-  // console.log("Registration attempt:", req.body);
-
   const { userName, email, password } = req.body;
 
-  // Validate required fields
   if (!userName || !email || !password) {
-    // console.log("Missing fields:", { userName, email, password });
     return res.status(400).json({
       success: false,
       message: "All fields are required",
@@ -21,30 +17,24 @@ export const registerUser = async (req, res) => {
   }
 
   try {
-    // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      // console.log("User already exists:", email);
       return res.status(400).json({
         success: false,
-        message: "User already exists with this email",
+        message: "Email already in use",
       });
     }
 
-    // Check if username already exists
     const existingUsername = await User.findOne({ userName });
     if (existingUsername) {
-      // console.log("Username already taken:", userName);
       return res.status(400).json({
         success: false,
         message: "Username already taken",
       });
     }
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Create user
     const newUser = new User({
       userName,
       email,
@@ -52,7 +42,6 @@ export const registerUser = async (req, res) => {
     });
 
     await newUser.save();
-    // console.log("✅ User registered successfully:", newUser.email);
 
     res.status(201).json({
       success: true,
@@ -68,16 +57,14 @@ export const registerUser = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Registration failed",
-      error: error.message,
     });
   }
 };
 
-// Login function
+// -------------------- LOGIN --------------------
 export const loginUser = async (req, res) => {
   const { email, password } = req.body;
 
-  // Validate required fields
   if (!email || !password) {
     return res.status(400).json({
       success: false,
@@ -86,55 +73,76 @@ export const loginUser = async (req, res) => {
   }
 
   try {
-    // Check if user exists
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid email or password",
-      });
+      return res
+        .status(401)
+        .json({ success: false, message: "Invalid credentials" });
     }
 
-    // Compare password
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid email or password",
-      });
+      return res
+        .status(401)
+        .json({ success: false, message: "Invalid credentials" });
     }
 
-    // Optional: generate JWT token
     const token = jwt.sign(
-      {
-        id: user._id,
-        role: user.role,
-        email: user.email,
-      },
+      { id: user._id, role: user.role, email: user.email },
       process.env.JWT_SECRET,
-      { expiresIn: "1h" }
+      { expiresIn: "1h" } // Short-lived token
     );
 
     res
       .cookie("token", token, {
         httpOnly: true,
-        secure: false, // Set to true in production with HTTPS
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 60 * 60 * 1000, // 1 hour
       })
       .json({
         success: true,
         message: "Login successful",
-        user: {
-          id: user._id,
-          email: user.email,
-          role: user.role,
-        },
+        user: { id: user._id, email: user.email, role: user.role },
       });
   } catch (error) {
     console.error("❌ Login Error:", error);
-    res.status(500).json({
+    res.status(500).json({ success: false, message: "Login failed" });
+  }
+};
+
+// -------------------- LOGOUT --------------------
+export const logoutUser = (req, res) => {
+  try {
+    res.clearCookie("token", {
+      httpOnly: true,
+    });
+
+    res.status(200).json({ success: true, message: "Logout successful" });
+  } catch (error) {
+    console.error("❌ Logout Error:", error);
+    res.status(500).json({ success: false, message: "Logout failed" });
+  }
+};
+
+// -------------------- AUTH MIDDLEWARE --------------------
+export const authMiddleware = async (req, res, next) => {
+  const token = req.cookies.token;
+  if (!token) {
+    return res.status(401).json({
       success: false,
-      message: "Login failed",
-      error: error.message,
+      message: "Unauthorized User!",
+    });
+  }
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch (error) {
+    console.error("❌ Auth Middleware Error:", error);
+    return res.status(401).json({
+      success: false,
+      message: "Unauthorized User!",
     });
   }
 };

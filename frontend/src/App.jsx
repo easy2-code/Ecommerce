@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Route, Routes } from "react-router-dom";
 
 // Auth
@@ -26,10 +26,32 @@ import ShoppingAccount from "./pages/shopping-view/ShoppingAccount";
 import NotFound from "./pages/not-found/NotFound";
 import CheckAuth from "./components/common/CheckAuth";
 import UnAuth from "./pages/UnAuth/UnAuth";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { checkAuth } from "./store/auth-slice";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function App() {
-  const { isAuthenticated, user } = useSelector((state) => state.auth);
+  const { isAuthenticated, user, isLoading } = useSelector(
+    (state) => state.auth
+  );
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(checkAuth());
+  }, [dispatch]);
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col space-y-4 p-10">
+        <Skeleton className="h-12 w-1/3 rounded-md" />
+        <Skeleton className="h-64 w-full rounded-md" />
+        <div className="flex space-x-4">
+          <Skeleton className="h-32 w-1/2 rounded-md" />
+          <Skeleton className="h-32 w-1/2 rounded-md" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col overflow-hidden bg-white">
