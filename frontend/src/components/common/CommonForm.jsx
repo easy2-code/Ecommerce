@@ -1,9 +1,14 @@
 import React, { useState } from "react";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
-import { Select, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
 import { Textarea } from "../ui/textarea";
-import { SelectContent } from "@radix-ui/react-select";
 import { Button } from "../ui/button";
 import { EyeIcon, EyeOffIcon } from "lucide-react"; // icons for password toggle
 
@@ -86,7 +91,7 @@ export default function CommonForm({
               <SelectValue placeholder={getControlItem.placeholder} />
             </SelectTrigger>
             <SelectContent>
-              {getControlItem.options && getControlItem.options.lenght > 0
+              {getControlItem.options && getControlItem.options.length > 0
                 ? getControlItem.options.map((optionItem) => (
                     <SelectItem key={optionItem.id} value={optionItem.id}>
                       {optionItem.label}
@@ -117,7 +122,7 @@ export default function CommonForm({
         element = (
           <Input
             name={getControlItem.name}
-            placeholder={getControlItem.placeholder}
+            placeholder={getControlItem.label}
             id={getControlItem.name}
             type={getControlItem.type}
             value={value}
