@@ -54,8 +54,10 @@ export default function AdminProducts() {
   const [editingProduct, setEditingProduct] = useState(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState(null);
+  const { productList, isLoading } = useSelector(
+    (state) => state.adminProducts
+  );
 
-  const { productList } = useSelector((state) => state.adminProducts);
   const dispatch = useDispatch();
 
   // Keep formData.image in sync with uploadedImageUrls
@@ -166,16 +168,27 @@ export default function AdminProducts() {
       </div>
 
       {/* Product Grid */}
+      {/* Product Grid */}
       <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-        {productList && productList.length > 0 ? (
-          productList.slice(0, visibleCount).map((item) => (
-            <AdminProductTile
-              key={item._id || item.id}
-              product={item}
-              onEdit={handleEditProduct}
-              onDelete={() => handleDeleteProduct(item)} // pass the full product object
-            />
-          ))
+        {isLoading ? (
+          // Page-level loading spinner
+          <div className="col-span-full flex flex-col items-center justify-center py-16 text-gray-500">
+            <Spinner className="w-12 h-12 mb-4" />
+            <p className="text-center text-lg font-medium">
+              Loading products...
+            </p>
+          </div>
+        ) : productList && productList.length > 0 ? (
+          productList
+            .slice(0, visibleCount)
+            .map((item) => (
+              <AdminProductTile
+                key={item._id || item.id}
+                product={item}
+                onEdit={handleEditProduct}
+                onDelete={() => handleDeleteProduct(item)}
+              />
+            ))
         ) : (
           <div className="col-span-full flex flex-col items-center justify-center py-16 text-gray-500">
             <PackageIcon className="w-12 h-12 mb-4" />
