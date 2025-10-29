@@ -1,3 +1,4 @@
+import { useEffect, Fragment, useState } from "react";
 import ProductImageUpload from "@/components/admin-view/ProductImageUpload";
 import CommonForm from "@/components/common/CommonForm";
 import { Button } from "@/components/ui/button";
@@ -9,9 +10,12 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { addProductFormElement } from "@/config";
+import { useDispatch, useSelector } from "react-redux";
+import { addNewProduct, fetchAllProducts } from "@/store/admin/products-slice";
+import { toast } from "sonner";
 
 const initialFormData = {
-  image: null,
+  image: null, // will hold the first uploaded image URL or an array
   title: "",
   description: "",
   category: "",
@@ -20,29 +24,65 @@ const initialFormData = {
   salePrice: "",
   totalStock: "",
 };
-import React, { Fragment, useState } from "react";
 
 export default function AdminProducts() {
   const [openCreateProductDialog, setOpenCreateProductDialog] = useState(false);
   const [formData, setFormData] = useState(initialFormData);
   const [imageFiles, setImageFiles] = useState([]);
   const [uploadedImageUrls, setUploadedImageUrls] = useState([]);
+  const [imageLoadingState, setImageLoadingState] = useState([]);
+  const { productList } = useSelector((state) => state.adminProducts);
+  const dispatch = useDispatch();
 
-  function onSubmit() {}
+  // Update formData.image whenever uploadedImageUrls changes
+  useEffect(() => {
+    if (uploadedImageUrls.length > 0) {
+      setFormData((prev) => ({
+        ...prev,
+        image: uploadedImageUrls, // store array of URLs
+      }));
+    } else {
+      setFormData((prev) => ({ ...prev, image: null }));
+    }
+  }, [uploadedImageUrls]);
+
+  function onSubmit(event) {
+    event.preventDefault();
+    dispatch(
+      addNewProduct({
+        ...formData,
+        image: uploadedImageUrls,
+      })
+    ).then((data) => {
+      console.log(data);
+      if (data?.payload?.success) {
+        dispatch(fetchAllProducts());
+        setOpenCreateProductDialog(false);
+        setImageFiles([]); // ✅ was null
+        setUploadedImageUrls([]); // ✅ optional, to reset images
+        setImageLoadingState([]); // ✅ optional
+        setFormData(initialFormData);
+        toast.success("Product added successfully 🎉", {
+          description: `${formData.title} has been added to your store.`,
+        });
+      }
+    });
+  }
+
+  useEffect(() => {
+    dispatch(fetchAllProducts());
+  }, [dispatch]);
+
+  // console.log(productList, uploadedImageUrls, "productList");
 
   return (
     <Fragment>
       <div className="mb-5 w-full flex justify-end">
-        <Button
-          className="cursor-pointer"
-          onClick={() => setOpenCreateProductDialog(true)}
-        >
+        <Button onClick={() => setOpenCreateProductDialog(true)}>
           Add New Product
         </Button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-4"></div>
-      {/* Create product drawer */}
       <Sheet
         open={openCreateProductDialog}
         onOpenChange={(isOpen) => setOpenCreateProductDialog(isOpen)}
@@ -52,9 +92,7 @@ export default function AdminProducts() {
           className="overflow-auto bg-white shadow-lg p-6 sm:w-[480px]"
         >
           <SheetHeader className="border-b pb-4 mb-4">
-            <SheetTitle className="text-xl font-semibold text-gray-800">
-              Add New Product
-            </SheetTitle>
+            <SheetTitle>Add New Product</SheetTitle>
             <SheetDescription>
               Fill in the details below to add a new product to your store.
             </SheetDescription>
@@ -65,6 +103,8 @@ export default function AdminProducts() {
             setImageFiles={setImageFiles}
             uploadedImageUrls={uploadedImageUrls}
             setUploadedImageUrls={setUploadedImageUrls}
+            imageLoadingState={imageLoadingState}
+            setImageLoadingState={setImageLoadingState}
           />
 
           <div className="py-4">

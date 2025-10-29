@@ -90,7 +90,7 @@ export const loginUser = async (req, res) => {
     const token = jwt.sign(
       { id: user._id, role: user.role, email: user.email },
       process.env.JWT_SECRET,
-      { expiresIn: "1h" } // Short-lived token
+      { expiresIn: "10h" } // Short-lived token
     );
 
     res

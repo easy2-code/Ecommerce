@@ -1,56 +1,137 @@
-import React, { useRef } from "react";
+// admin-view/ProductImageUpload.jsx
+
+import React, { useEffect, useRef } from "react";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
 import { UploadCloudIcon, XIcon } from "lucide-react";
 import { Button } from "../ui/button";
+import { Skeleton } from "../ui/skeleton";
 
-// ProductImageUpload Component
-// ---------------------------------
-// Handles multiple product image uploads with:
-//  - Drag & drop support
-//  - File browsing
-//  - Live image previews
-//  - Remove functionality
-
+/**
+ * ProductImageUpload Component
+ * --------------------------------------------------------
+ * Handles multiple product image uploads with:
+ *  ✅ Drag & drop support
+ *  ✅ File browsing
+ *  ✅ Live previews
+ *  ✅ Remove functionality
+ *  ✅ Upload to Cloudinary via backend (using Fetch)
+ */
 export default function ProductImageUpload({
   imageFiles,
   setImageFiles,
   uploadedImageUrls,
   setUploadedImageUrls,
+  setImageLoadingState,
+  imageLoadingState,
 }) {
   const inputRef = useRef(null);
 
-  //  Handles file selection from system dialog
+  // 📂 Handles file selection from the system file picker
   function handleImageFileChange(event) {
     const selectedFiles = Array.from(event.target.files);
     setImageFiles((prev) => [...prev, ...selectedFiles]);
   }
 
-  //  Prevents default browser behavior when dragging files over the area
+  // 🚫 Prevents default drag-over browser behavior
   function handleDragOver(event) {
     event.preventDefault();
   }
 
-  //  Handles file drop and adds them to the upload list
+  // 📥 Handles file drop action
   function handleDrop(event) {
     event.preventDefault();
     const droppedFiles = Array.from(event.dataTransfer.files);
     setImageFiles((prev) => [...prev, ...droppedFiles]);
   }
 
-  //  Removes a specific image from the list by index
+  // ❌ Removes a single image by index
   function handleRemoveImage(index) {
     setImageFiles((prev) => prev.filter((_, i) => i !== index));
+    setUploadedImageUrls((prev) => prev.filter((_, i) => i !== index));
+    setImageLoadingState((prev) => prev.filter((_, i) => i !== index));
   }
+
+  function handleClearAll() {
+    setImageFiles([]);
+    setUploadedImageUrls([]);
+    setImageLoadingState([]);
+  }
+
+  // ☁️ Upload images to Cloudinary via backend
+  async function uploadImagesToCloudinary(newFiles) {
+    // Initialize loading state for new files
+    const loadingArray = [...imageLoadingState];
+    newFiles.forEach((file) => {
+      const index = imageFiles.indexOf(file);
+      loadingArray[index] = true;
+    });
+    setImageLoadingState([...loadingArray]);
+
+    // Upload all files concurrently
+    const uploadPromises = newFiles.map(async (file) => {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      try {
+        const response = await fetch(
+          "http://localhost:3000/api/admin/products/upload-image",
+          { method: "POST", body: formData }
+        );
+        const data = await response.json();
+        if (data.success && data.result?.secure_url) {
+          return { file, url: data.result.secure_url };
+        }
+      } catch (err) {
+        console.error("Error uploading image:", err);
+      }
+      return null;
+    });
+
+    const results = await Promise.all(uploadPromises);
+
+    // Update uploaded URLs
+    const newUploadedUrls = results
+      .filter((res) => res !== null)
+      .map((res) => res.url);
+
+    setUploadedImageUrls((prev) => [...prev, ...newUploadedUrls]);
+
+    // Reset loading state for uploaded files
+    const newLoadingArray = [...imageLoadingState];
+    newFiles.forEach((file) => {
+      const index = imageFiles.indexOf(file);
+      newLoadingArray[index] = false;
+    });
+    setImageLoadingState(newLoadingArray);
+  }
+
+  // 🧠 Auto-upload when images are added
+  useEffect(() => {
+    if (imageFiles.length > 0) {
+      // Initialize loading state for any new files
+      const newLoadingState = [...imageLoadingState];
+      while (newLoadingState.length < imageFiles.length) {
+        newLoadingState.push(false);
+      }
+      setImageLoadingState(newLoadingState);
+
+      // Upload only files that do not have an uploaded URL yet
+      const newFiles = imageFiles.slice(uploadedImageUrls.length);
+      if (newFiles.length > 0) {
+        uploadImagesToCloudinary(newFiles);
+      }
+    }
+  }, [imageFiles]);
 
   return (
     <div className="w-full max-w-lg mx-auto mt-6">
-      {/* Section Label */}
+      {/* Section Header */}
       <Label className="text-base font-semibold text-gray-800 mb-3 block">
         Product Images
       </Label>
 
-      {/* Drag & Drop Upload Zone */}
+      {/* Upload Zone */}
       <div
         onDragOver={handleDragOver}
         onDrop={handleDrop}
@@ -66,7 +147,7 @@ export default function ProductImageUpload({
           onChange={handleImageFileChange}
         />
 
-        {/* When no images are uploaded yet */}
+        {/* No images selected yet */}
         {imageFiles.length === 0 ? (
           <Label
             htmlFor="image-upload"
@@ -79,40 +160,47 @@ export default function ProductImageUpload({
             </span>
           </Label>
         ) : (
-          /* When images are uploaded, display previews */
+          // Image previews
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-            {imageFiles.map((file, index) => (
-              <div
-                key={index}
-                className="relative group rounded-lg border bg-white shadow-sm hover:shadow-md transition duration-200 overflow-hidden"
-              >
-                {/* Image Preview with fixed width/height */}
-                <div className="flex items-center justify-center bg-gray-100 w-full h-40">
-                  <img
-                    src={URL.createObjectURL(file)}
-                    alt={`preview-${index}`}
-                    className="object-cover w-full h-40 rounded-md"
-                  />
-                </div>
-
-                {/* Remove Image Button (shows on hover) */}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 bg-white/80 hover:bg-white text-gray-700 transition"
-                  onClick={() => handleRemoveImage(index)}
+            {imageFiles.map((file, index) => {
+              const isLoading = imageLoadingState[index]; // ✅ per-image loading
+              return (
+                <div
+                  key={index}
+                  className="relative group rounded-lg border bg-white shadow-sm hover:shadow-md transition duration-200 overflow-hidden"
                 >
-                  <XIcon className="w-4 h-4" />
-                </Button>
-
-                {/* File name */}
-                <div className="p-2 text-xs text-gray-600 truncate text-center">
-                  {file.name}
+                  {isLoading ? (
+                    <div className="flex flex-col items-center justify-center rounded-lg border border-gray-200 bg-gray-50 p-2">
+                      <Skeleton className="w-full h-40 rounded-md bg-gray-200" />
+                      <Skeleton className="w-2/3 h-4 mt-2 bg-gray-200" />
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex items-center justify-center bg-gray-100 w-full h-40">
+                        <img
+                          src={URL.createObjectURL(file)}
+                          alt={`preview-${index}`}
+                          className="object-cover w-full h-full rounded-md"
+                        />
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 bg-white/80 hover:bg-white text-gray-700 transition"
+                        onClick={() => handleRemoveImage(index)}
+                      >
+                        <XIcon className="w-4 h-4" />
+                      </Button>
+                      <div className="p-2 text-xs text-gray-600 truncate text-center">
+                        {file.name}
+                      </div>
+                    </>
+                  )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
 
-            {/* Add More Image Tile */}
+            {/* Add more image button */}
             <Label
               htmlFor="image-upload"
               className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg h-40 cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition"
@@ -124,13 +212,29 @@ export default function ProductImageUpload({
             </Label>
           </div>
         )}
+
+        {imageFiles.length > 0 && (
+          <div className="flex justify-center mt-2 gap-2">
+            <Button variant="outline" size="sm" onClick={handleClearAll}>
+              Clear All
+            </Button>
+          </div>
+        )}
       </div>
 
-      {/* Footer text showing image count */}
+      {/* Footer — image count */}
       {imageFiles.length > 0 && (
         <p className="text-sm text-gray-500 mt-3 text-center">
           {imageFiles.length} image{imageFiles.length > 1 ? "s" : ""} selected
         </p>
+      )}
+
+      {/* Uploaded URLs (for debugging, optional) */}
+      {uploadedImageUrls.length > 0 && (
+        <div className="mt-4 text-xs text-green-600 text-center">
+          ✅ Uploaded {uploadedImageUrls.length} image
+          {uploadedImageUrls.length > 1 ? "s" : ""} successfully.
+        </div>
       )}
     </div>
   );

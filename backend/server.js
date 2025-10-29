@@ -4,6 +4,7 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import dotenv from "dotenv";
 import authRouter from "./routes/auth/auth.route.js";
+import adminProductsRouter from "./routes/admin/products.route.js";
 
 dotenv.config();
 
@@ -36,6 +37,7 @@ app.use(express.json());
 
 // Routes
 app.use("/api/auth", authRouter);
+app.use("/api/admin/products", adminProductsRouter);
 
 // Test route
 app.get("/", (req, res) => {
