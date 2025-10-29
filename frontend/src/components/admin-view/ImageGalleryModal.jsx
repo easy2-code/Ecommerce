@@ -177,7 +177,10 @@ export default function ImageGalleryModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl w-full max-h-[90vh] flex flex-col p-0 bg-white border shadow-xl [&>button]:hidden">
+      <DialogContent
+        aria-describedby={undefined}
+        className="max-w-4xl w-full max-h-[90vh] flex flex-col p-0 bg-white border shadow-xl [&>button]:hidden"
+      >
         {/* Header */}
         <DialogHeader className="flex flex-row items-center justify-between p-4 border-b">
           <DialogTitle className="text-gray-900 text-lg font-semibold">
