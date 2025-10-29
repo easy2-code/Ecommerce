@@ -49,17 +49,26 @@ export default function ProductImageUpload({
   }
 
   // ☁️ Upload images to Cloudinary via backend
-  async function uploadImagesToCloudinary(newFiles) {
-    // Initialize loading state for new files
-    const loadingArray = [...imageLoadingState];
-    newFiles.forEach((file) => {
-      const index = imageFiles.indexOf(file);
-      loadingArray[index] = true;
+  async function uploadImagesToCloudinary(filesToUpload) {
+    if (filesToUpload.length === 0) return;
+
+    // Create loading states for the files to upload
+    const filesWithIndex = filesToUpload.map((file) => ({
+      file,
+      index: imageFiles.indexOf(file),
+    }));
+
+    // Set loading state to true for these files
+    const newLoadingState = [...imageLoadingState];
+    filesWithIndex.forEach(({ index }) => {
+      if (index !== -1) {
+        newLoadingState[index] = true;
+      }
     });
-    setImageLoadingState([...loadingArray]);
+    setImageLoadingState(newLoadingState);
 
     // Upload all files concurrently
-    const uploadPromises = newFiles.map(async (file) => {
+    const uploadPromises = filesWithIndex.map(async ({ file, index }) => {
       const formData = new FormData();
       formData.append("file", file);
 
@@ -70,33 +79,43 @@ export default function ProductImageUpload({
         );
         const data = await response.json();
         if (data.success && data.result?.secure_url) {
-          return { file, url: data.result.secure_url };
+          return { index, url: data.result.secure_url };
         }
       } catch (err) {
         console.error("Error uploading image:", err);
       }
-      return null;
+      return { index, url: null };
     });
 
     const results = await Promise.all(uploadPromises);
 
-    // Update uploaded URLs
-    const newUploadedUrls = results
-      .filter((res) => res !== null)
-      .map((res) => res.url);
+    // Update uploaded URLs with the correct positions
+    const successfulUploads = results.filter((res) => res.url !== null);
 
-    setUploadedImageUrls((prev) => [...prev, ...newUploadedUrls]);
+    // Create a new array for uploaded URLs to maintain order
+    const updatedUrls = [...uploadedImageUrls];
+    successfulUploads.forEach(({ index, url }) => {
+      // Insert the new URL at the correct position
+      if (index < updatedUrls.length) {
+        updatedUrls[index] = url;
+      } else {
+        updatedUrls.push(url);
+      }
+    });
+
+    setUploadedImageUrls(updatedUrls);
 
     // Reset loading state for uploaded files
-    const newLoadingArray = [...imageLoadingState];
-    newFiles.forEach((file) => {
-      const index = imageFiles.indexOf(file);
-      newLoadingArray[index] = false;
+    const finalLoadingState = [...imageLoadingState];
+    filesWithIndex.forEach(({ index }) => {
+      if (index !== -1) {
+        finalLoadingState[index] = false;
+      }
     });
-    setImageLoadingState(newLoadingArray);
+    setImageLoadingState(finalLoadingState);
   }
 
-  // 🧠 Auto-upload when images are added
+  // 🧠 Auto-upload when images are added - FIXED LOGIC
   useEffect(() => {
     if (imageFiles.length > 0) {
       // Initialize loading state for any new files
@@ -106,12 +125,24 @@ export default function ProductImageUpload({
       }
       setImageLoadingState(newLoadingState);
 
-      // Upload only files that do not have an uploaded URL yet and are not existing images
-      const newFiles = imageFiles
-        .filter((file) => !file.isExisting)
-        .slice(uploadedImageUrls.length);
-      if (newFiles.length > 0) {
-        uploadImagesToCloudinary(newFiles);
+      // Find files that need to be uploaded:
+      // 1. Not existing images
+      // 2. Don't have a corresponding URL in uploadedImageUrls yet
+      const filesToUpload = imageFiles.filter((file, index) => {
+        // Skip existing images
+        if (file.isExisting) return false;
+
+        // Skip files that already have URLs
+        // Check if this file position has a URL in uploadedImageUrls
+        if (index < uploadedImageUrls.length && uploadedImageUrls[index]) {
+          return false;
+        }
+
+        return true;
+      });
+
+      if (filesToUpload.length > 0) {
+        uploadImagesToCloudinary(filesToUpload);
       }
     }
   }, [imageFiles]);
@@ -155,13 +186,43 @@ export default function ProductImageUpload({
             </span>
           </Label>
         ) : (
-          // Image previews - ONLY SHOW ONCE
+          // Image previews
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-            {/* Show ALL images from uploadedImageUrls (this includes both existing and newly uploaded) */}
-            {uploadedImageUrls.map((url, index) => {
-              const correspondingFile = imageFiles[index];
+            {/* Show ALL images from uploadedImageUrls */}
+            {imageFiles.map((file, index) => {
+              const url = uploadedImageUrls[index];
               const isLoading = imageLoadingState[index];
 
+              // If no URL and not loading, and it's a new file, show file preview
+              if (!url && !isLoading && !file.isExisting) {
+                return (
+                  <div
+                    key={`file-${index}`}
+                    className="relative group rounded-lg border bg-white shadow-sm hover:shadow-md transition duration-200 overflow-hidden"
+                  >
+                    <div className="flex items-center justify-center bg-gray-100 w-full h-40">
+                      <img
+                        src={URL.createObjectURL(file)}
+                        alt={`preview-${index}`}
+                        className="object-cover w-full h-full rounded-md"
+                      />
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 bg-white/80 hover:bg-white text-gray-700 transition"
+                      onClick={() => handleRemoveImage(index)}
+                    >
+                      <XIcon className="w-4 h-4" />
+                    </Button>
+                    <div className="p-2 text-xs text-gray-600 truncate text-center">
+                      Ready to upload
+                    </div>
+                  </div>
+                );
+              }
+
+              // Show uploaded or loading images
               return (
                 <div
                   key={`image-${index}`}
@@ -169,7 +230,7 @@ export default function ProductImageUpload({
                 >
                   {isLoading ? (
                     <Skeleton className="w-full h-40 rounded-md bg-gray-200" />
-                  ) : (
+                  ) : url ? (
                     <div className="flex items-center justify-center bg-gray-100 w-full h-40">
                       <img
                         src={url}
@@ -177,7 +238,8 @@ export default function ProductImageUpload({
                         className="object-cover w-full h-full rounded-md"
                       />
                     </div>
-                  )}
+                  ) : null}
+
                   <Button
                     variant="ghost"
                     size="icon"
@@ -187,49 +249,13 @@ export default function ProductImageUpload({
                     <XIcon className="w-4 h-4" />
                   </Button>
                   <div className="p-2 text-xs text-gray-600 truncate text-center">
-                    {correspondingFile?.isExisting
+                    {file.isExisting
                       ? "Existing Image"
-                      : `Image ${index + 1}`}
-                  </div>
-                </div>
-              );
-            })}
-
-            {/* Show loading skeletons for NEW files that haven't been uploaded yet */}
-            {newFiles.map((file, index) => {
-              // Only show files that haven't been uploaded yet (no URL)
-              const fileIndex = imageFiles.indexOf(file);
-              const isLoading = imageLoadingState[fileIndex];
-
-              // If this file already has a URL in uploadedImageUrls, skip it (it's shown above)
-              if (uploadedImageUrls[fileIndex]) return null;
-
-              return (
-                <div
-                  key={`loading-${fileIndex}`}
-                  className="relative group rounded-lg border bg-white shadow-sm hover:shadow-md transition duration-200 overflow-hidden"
-                >
-                  {isLoading ? (
-                    <Skeleton className="w-full h-40 rounded-md bg-gray-200" />
-                  ) : (
-                    <div className="flex items-center justify-center bg-gray-100 w-full h-40">
-                      <img
-                        src={URL.createObjectURL(file)}
-                        alt={`preview-${fileIndex}`}
-                        className="object-cover w-full h-full rounded-md"
-                      />
-                    </div>
-                  )}
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 bg-white/80 hover:bg-white text-gray-700 transition"
-                    onClick={() => handleRemoveImage(fileIndex)}
-                  >
-                    <XIcon className="w-4 h-4" />
-                  </Button>
-                  <div className="p-2 text-xs text-gray-600 truncate text-center">
-                    Uploading...
+                      : isLoading
+                      ? "Uploading..."
+                      : url
+                      ? `Image ${index + 1}`
+                      : "Ready to upload"}
                   </div>
                 </div>
               );
@@ -248,7 +274,7 @@ export default function ProductImageUpload({
           </div>
         )}
 
-        {(uploadedImageUrls.length > 0 || newFiles.length > 0) && (
+        {imageFiles.length > 0 && (
           <div className="flex justify-center mt-2 gap-2">
             <Button variant="outline" size="sm" onClick={handleClearAll}>
               Clear All
@@ -257,19 +283,11 @@ export default function ProductImageUpload({
         )}
       </div>
 
-      {/* Footer — image count */}
-      {/* {(uploadedImageUrls.length > 0 || newFiles.length > 0) && (
-        <p className="text-sm text-gray-500 mt-3 text-center">
-          {uploadedImageUrls.length + newFiles.length} image
-          {uploadedImageUrls.length + newFiles.length > 1 ? "s" : ""} selected
-        </p>
-      )} */}
-
-      {/* Uploaded URLs (for debugging, optional) */}
+      {/* Upload status */}
       {uploadedImageUrls.length > 0 && (
         <div className="mt-4 text-xs text-green-600 text-center">
-          ✅ {uploadedImageUrls.length} image
-          {uploadedImageUrls.length > 1 ? "s" : ""} ready
+          ✅ {uploadedImageUrls.filter((url) => url).length} image
+          {uploadedImageUrls.filter((url) => url).length > 1 ? "s" : ""} ready
         </div>
       )}
     </div>
