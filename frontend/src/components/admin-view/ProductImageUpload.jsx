@@ -1,4 +1,4 @@
-// admin-view/ProductImageUpload.jsx
+// components/admin-view/ProductImageUpload.jsx
 
 import React, { useEffect, useRef } from "react";
 import { Label } from "../ui/label";
