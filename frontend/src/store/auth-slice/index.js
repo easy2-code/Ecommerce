@@ -64,23 +64,48 @@ export const loginUser = createAsyncThunk(
   }
 );
 
+// --------------------- LOGOUT USER ---------------------
+export const logoutUserThunk = createAsyncThunk(
+  "auth/logoutUserThunk",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await fetch("http://localhost:3000/api/auth/logout", {
+        method: "POST",
+        credentials: "include", // include cookies
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        return rejectWithValue(data.message || "Logout failed");
+      }
+
+      return data;
+    } catch (error) {
+      return rejectWithValue(error.message || "Network error - logout failed");
+    }
+  }
+);
+
 // --------------------- CHECK AUTH ---------------------
 export const checkAuth = createAsyncThunk(
   "auth/checkAuth",
-  async (formData, { rejectWithValue }) => {
+  async (_, { rejectWithValue }) => {
     try {
       const response = await fetch(
         "http://localhost:3000/api/auth/check-auth",
         {
           method: "GET",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formData),
-          credentials: "include", // ✅ include cookies
+          credentials: "include",
         }
       );
 
-      const data = await response.json();
+      // Handle no session gracefully
+      if (response.status === 401) {
+        return { user: null };
+      }
 
+      const data = await response.json();
       if (!response.ok) {
         return rejectWithValue(
           data.message || `HTTP error! status: ${response.status}`
@@ -89,9 +114,7 @@ export const checkAuth = createAsyncThunk(
 
       return data;
     } catch (error) {
-      return rejectWithValue(
-        error.message || "Network error - cannot connect to server"
-      );
+      return rejectWithValue(error.message || "Network error");
     }
   }
 );
@@ -147,6 +170,17 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.user = null;
         state.isAuthenticated = false;
+        state.error = action.payload;
+      });
+
+    // Logout
+    builder
+      .addCase(logoutUserThunk.fulfilled, (state) => {
+        state.user = null;
+        state.isAuthenticated = false;
+        state.isLoading = false;
+      })
+      .addCase(logoutUserThunk.rejected, (state, action) => {
         state.error = action.payload;
       });
 

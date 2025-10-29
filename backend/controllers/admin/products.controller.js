@@ -22,7 +22,7 @@ export const handleImageUpload = async (req, res) => {
       result,
     });
   } catch (error) {
-    console.error("Image upload error:", error);
+    // console.error("Image upload error:", error);
     res.status(500).json({
       success: false,
       message: "Error occurred while uploading image",
@@ -63,7 +63,7 @@ export const addProduct = async (req, res) => {
       data: newlyCreatedProduct,
     });
   } catch (error) {
-    console.error("Add product error:", error);
+    // console.error("Add product error:", error);
     res.status(500).json({
       success: false,
       message: "Failed to create product",
@@ -80,7 +80,7 @@ export const fetchAllProducts = async (req, res) => {
       data: products,
     });
   } catch (error) {
-    console.error("Fetch products error:", error);
+    // console.error("Fetch products error:", error);
     res.status(500).json({
       success: false,
       message: "Failed to fetch products",
@@ -109,7 +109,7 @@ export const editProduct = async (req, res) => {
       data: updatedProduct,
     });
   } catch (error) {
-    console.error("Edit product error:", error);
+    // console.error("Edit product error:", error);
     res.status(500).json({
       success: false,
       message: "Failed to edit product",
@@ -135,7 +135,7 @@ export const deleteProduct = async (req, res) => {
       message: "Product deleted successfully",
     });
   } catch (error) {
-    console.error("Delete product error:", error);
+    // console.error("Delete product error:", error);
     res.status(500).json({
       success: false,
       message: "Failed to delete product",
