@@ -7,16 +7,6 @@ import { UploadCloudIcon, XIcon } from "lucide-react";
 import { Button } from "../ui/button";
 import { Skeleton } from "../ui/skeleton";
 
-/**
- * ProductImageUpload Component
- * --------------------------------------------------------
- * Handles multiple product image uploads with:
- *  ✅ Drag & drop support
- *  ✅ File browsing
- *  ✅ Live previews
- *  ✅ Remove functionality
- *  ✅ Upload to Cloudinary via backend (using Fetch)
- */
 export default function ProductImageUpload({
   imageFiles,
   setImageFiles,
@@ -116,13 +106,18 @@ export default function ProductImageUpload({
       }
       setImageLoadingState(newLoadingState);
 
-      // Upload only files that do not have an uploaded URL yet
-      const newFiles = imageFiles.slice(uploadedImageUrls.length);
+      // Upload only files that do not have an uploaded URL yet and are not existing images
+      const newFiles = imageFiles
+        .filter((file) => !file.isExisting)
+        .slice(uploadedImageUrls.length);
       if (newFiles.length > 0) {
         uploadImagesToCloudinary(newFiles);
       }
     }
   }, [imageFiles]);
+
+  // Get only NEW files (not existing ones)
+  const newFiles = imageFiles.filter((file) => !file.isExisting);
 
   return (
     <div className="w-full max-w-lg mx-auto mt-6">
@@ -148,7 +143,7 @@ export default function ProductImageUpload({
         />
 
         {/* No images selected yet */}
-        {imageFiles.length === 0 ? (
+        {uploadedImageUrls.length === 0 && newFiles.length === 0 ? (
           <Label
             htmlFor="image-upload"
             className="flex flex-col items-center justify-center cursor-pointer h-44"
@@ -160,47 +155,87 @@ export default function ProductImageUpload({
             </span>
           </Label>
         ) : (
-          // Image previews
+          // Image previews - ONLY SHOW ONCE
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-            {imageFiles.map((file, index) => {
-              const isLoading = imageLoadingState[index]; // ✅ per-image loading
+            {/* Show ALL images from uploadedImageUrls (this includes both existing and newly uploaded) */}
+            {uploadedImageUrls.map((url, index) => {
+              const correspondingFile = imageFiles[index];
+              const isLoading = imageLoadingState[index];
+
               return (
                 <div
-                  key={index}
+                  key={`image-${index}`}
                   className="relative group rounded-lg border bg-white shadow-sm hover:shadow-md transition duration-200 overflow-hidden"
                 >
                   {isLoading ? (
-                    <div className="flex flex-col items-center justify-center rounded-lg border border-gray-200 bg-gray-50 p-2">
-                      <Skeleton className="w-full h-40 rounded-md bg-gray-200" />
-                      <Skeleton className="w-2/3 h-4 mt-2 bg-gray-200" />
-                    </div>
+                    <Skeleton className="w-full h-40 rounded-md bg-gray-200" />
                   ) : (
-                    <>
-                      <div className="flex items-center justify-center bg-gray-100 w-full h-40">
-                        <img
-                          src={URL.createObjectURL(file)}
-                          alt={`preview-${index}`}
-                          className="object-cover w-full h-full rounded-md"
-                        />
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 bg-white/80 hover:bg-white text-gray-700 transition"
-                        onClick={() => handleRemoveImage(index)}
-                      >
-                        <XIcon className="w-4 h-4" />
-                      </Button>
-                      <div className="p-2 text-xs text-gray-600 truncate text-center">
-                        {file.name}
-                      </div>
-                    </>
+                    <div className="flex items-center justify-center bg-gray-100 w-full h-40">
+                      <img
+                        src={url}
+                        alt={`product-${index}`}
+                        className="object-cover w-full h-full rounded-md"
+                      />
+                    </div>
                   )}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 bg-white/80 hover:bg-white text-gray-700 transition"
+                    onClick={() => handleRemoveImage(index)}
+                  >
+                    <XIcon className="w-4 h-4" />
+                  </Button>
+                  <div className="p-2 text-xs text-gray-600 truncate text-center">
+                    {correspondingFile?.isExisting
+                      ? "Existing Image"
+                      : `Image ${index + 1}`}
+                  </div>
                 </div>
               );
             })}
 
-            {/* Add more image button */}
+            {/* Show loading skeletons for NEW files that haven't been uploaded yet */}
+            {newFiles.map((file, index) => {
+              // Only show files that haven't been uploaded yet (no URL)
+              const fileIndex = imageFiles.indexOf(file);
+              const isLoading = imageLoadingState[fileIndex];
+
+              // If this file already has a URL in uploadedImageUrls, skip it (it's shown above)
+              if (uploadedImageUrls[fileIndex]) return null;
+
+              return (
+                <div
+                  key={`loading-${fileIndex}`}
+                  className="relative group rounded-lg border bg-white shadow-sm hover:shadow-md transition duration-200 overflow-hidden"
+                >
+                  {isLoading ? (
+                    <Skeleton className="w-full h-40 rounded-md bg-gray-200" />
+                  ) : (
+                    <div className="flex items-center justify-center bg-gray-100 w-full h-40">
+                      <img
+                        src={URL.createObjectURL(file)}
+                        alt={`preview-${fileIndex}`}
+                        className="object-cover w-full h-full rounded-md"
+                      />
+                    </div>
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 bg-white/80 hover:bg-white text-gray-700 transition"
+                    onClick={() => handleRemoveImage(fileIndex)}
+                  >
+                    <XIcon className="w-4 h-4" />
+                  </Button>
+                  <div className="p-2 text-xs text-gray-600 truncate text-center">
+                    Uploading...
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* Add more button */}
             <Label
               htmlFor="image-upload"
               className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg h-40 cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition"
@@ -213,7 +248,7 @@ export default function ProductImageUpload({
           </div>
         )}
 
-        {imageFiles.length > 0 && (
+        {(uploadedImageUrls.length > 0 || newFiles.length > 0) && (
           <div className="flex justify-center mt-2 gap-2">
             <Button variant="outline" size="sm" onClick={handleClearAll}>
               Clear All
@@ -223,17 +258,18 @@ export default function ProductImageUpload({
       </div>
 
       {/* Footer — image count */}
-      {imageFiles.length > 0 && (
+      {/* {(uploadedImageUrls.length > 0 || newFiles.length > 0) && (
         <p className="text-sm text-gray-500 mt-3 text-center">
-          {imageFiles.length} image{imageFiles.length > 1 ? "s" : ""} selected
+          {uploadedImageUrls.length + newFiles.length} image
+          {uploadedImageUrls.length + newFiles.length > 1 ? "s" : ""} selected
         </p>
-      )}
+      )} */}
 
       {/* Uploaded URLs (for debugging, optional) */}
       {uploadedImageUrls.length > 0 && (
         <div className="mt-4 text-xs text-green-600 text-center">
-          ✅ Uploaded {uploadedImageUrls.length} image
-          {uploadedImageUrls.length > 1 ? "s" : ""} successfully.
+          ✅ {uploadedImageUrls.length} image
+          {uploadedImageUrls.length > 1 ? "s" : ""} ready
         </div>
       )}
     </div>

@@ -113,6 +113,7 @@ export default function AdminProducts() {
   };
 
   // Edit handler
+  // Edit handler - FIXED VERSION
   const handleEditProduct = (product) => {
     setEditingProduct(product);
     setFormData({
@@ -120,7 +121,19 @@ export default function AdminProducts() {
       image: product.image || [],
     });
     setUploadedImageUrls(product.image || []);
-    setImageFiles([]); // reset file uploads
+
+    // Create file-like objects for existing images so they appear in the uploader
+    const existingImageFiles = (product.image || []).map((url, index) => {
+      return {
+        name: `existing-image-${index}`,
+        type: "image/jpeg", // or detect from URL if possible
+        url: url,
+        isExisting: true, // flag to identify existing images
+      };
+    });
+
+    setImageFiles(existingImageFiles);
+    setImageLoadingState(Array(product.image?.length || 0).fill(false));
     setOpenCreateProductDialog(true);
   };
 
@@ -179,16 +192,24 @@ export default function AdminProducts() {
             </p>
           </div>
         ) : productList && productList.length > 0 ? (
-          productList
-            .slice(0, visibleCount)
-            .map((item) => (
+          productList.slice(0, visibleCount).map((item, index) => {
+            // Debug: Check what keys are available
+            console.log("Product:", {
+              _id: item._id,
+              id: item.id,
+              title: item.title,
+              index: index,
+            });
+
+            return (
               <AdminProductTile
-                key={item._id || item.id}
+                key={item._id || item.id || `product-${index}`}
                 product={item}
                 onEdit={handleEditProduct}
                 onDelete={() => handleDeleteProduct(item)}
               />
-            ))
+            );
+          })
         ) : (
           <div className="col-span-full flex flex-col items-center justify-center py-16 text-gray-500">
             <PackageIcon className="w-12 h-12 mb-4" />
