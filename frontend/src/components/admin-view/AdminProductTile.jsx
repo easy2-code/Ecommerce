@@ -4,21 +4,33 @@ import { Card, CardContent, CardFooter } from "../ui/card";
 import { Button } from "../ui/button";
 import { Edit, Trash2 } from "lucide-react";
 
-export default function AdminProductTile({ product, onEdit, onDelete }) {
+export default function AdminProductTile({
+  product,
+  onEdit,
+  onDelete,
+  onImageClick,
+}) {
   const imageSrc = Array.isArray(product?.image)
     ? product.image[0]
     : product?.image;
 
+  const handleImageClick = () => {
+    if (onImageClick && product?.image) {
+      onImageClick(product.image);
+    }
+  };
+
   return (
     <Card className="group relative bg-white rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden">
       {/* Image Section */}
-      <div className="relative bg-gray-100">
-        {" "}
-        <img
-          src={imageSrc}
-          alt={product?.title}
-          className="w-full h-56 object-contain transition-transform duration-300 "
-        />
+      <div className="relative">
+        <div className="cursor-pointer" onClick={handleImageClick}>
+          <img
+            src={imageSrc}
+            alt={product?.title}
+            className="w-full h-56 object-contain transition-transform duration-300 group-hover:scale-105 bg-gray-50"
+          />
+        </div>
         {product?.salePrice > 0 && (
           <span className="absolute top-3 left-3 bg-black text-white text-xs font-semibold px-2 py-1 rounded-md shadow-sm">
             Sale
@@ -26,7 +38,7 @@ export default function AdminProductTile({ product, onEdit, onDelete }) {
         )}
       </div>
 
-      {/* Product Info */}
+      {/* Content Section */}
       <CardContent className="p-4">
         <h2 className="text-lg font-semibold text-gray-900 truncate">
           {product?.title}
@@ -54,13 +66,14 @@ export default function AdminProductTile({ product, onEdit, onDelete }) {
         </div>
       </CardContent>
 
-      {/* Action Buttons */}
+      {/* Footer Actions */}
       <CardFooter className="flex justify-end gap-2 border-t p-3 bg-gray-50">
-        <Button className="cursor-pointer" onClick={() => onEdit(product)}>
+        <Button onClick={() => onEdit(product)}>
           <Edit size={16} />
           Edit
         </Button>
-        <Button className="cursor-pointer" onClick={onDelete}>
+
+        <Button onClick={onDelete}>
           <Trash2 size={16} />
           Delete
         </Button>

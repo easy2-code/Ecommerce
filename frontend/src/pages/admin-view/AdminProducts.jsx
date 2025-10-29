@@ -3,7 +3,7 @@ import ProductImageUpload from "@/components/admin-view/ProductImageUpload";
 import CommonForm from "@/components/common/CommonForm";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import { PackageIcon } from "lucide-react"; // or any icon you like
+import { PackageIcon } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -21,6 +21,7 @@ import {
 } from "@/store/admin/products-slice";
 import { toast } from "sonner";
 import AdminProductTile from "@/components/admin-view/AdminProductTile";
+import ImageGalleryModal from "@/components/admin-view/ImageGalleryModal"; // Add this import
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -54,6 +55,11 @@ export default function AdminProducts() {
   const [editingProduct, setEditingProduct] = useState(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState(null);
+
+  // Add gallery state
+  const [galleryOpen, setGalleryOpen] = useState(false);
+  const [galleryImages, setGalleryImages] = useState([]);
+
   const { productList, isLoading } = useSelector(
     (state) => state.adminProducts
   );
@@ -68,6 +74,12 @@ export default function AdminProducts() {
   useEffect(() => {
     dispatch(fetchAllProducts());
   }, [dispatch]);
+
+  // Add gallery handler function
+  const handleImageClick = (images) => {
+    setGalleryImages(images);
+    setGalleryOpen(true);
+  };
 
   // Submit handler for add/update
   const onSubmit = (event) => {
@@ -113,7 +125,6 @@ export default function AdminProducts() {
   };
 
   // Edit handler
-  // Edit handler - FIXED VERSION
   const handleEditProduct = (product) => {
     setEditingProduct(product);
     setFormData({
@@ -126,9 +137,9 @@ export default function AdminProducts() {
     const existingImageFiles = (product.image || []).map((url, index) => {
       return {
         name: `existing-image-${index}`,
-        type: "image/jpeg", // or detect from URL if possible
+        type: "image/jpeg",
         url: url,
-        isExisting: true, // flag to identify existing images
+        isExisting: true,
       };
     });
 
@@ -181,10 +192,8 @@ export default function AdminProducts() {
       </div>
 
       {/* Product Grid */}
-      {/* Product Grid */}
       <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
         {isLoading ? (
-          // Page-level loading spinner
           <div className="col-span-full flex flex-col items-center justify-center py-16 text-gray-500">
             <Spinner className="w-12 h-12 mb-4" />
             <p className="text-center text-lg font-medium">
@@ -199,6 +208,7 @@ export default function AdminProducts() {
                 product={item}
                 onEdit={handleEditProduct}
                 onDelete={() => handleDeleteProduct(item)}
+                onImageClick={handleImageClick} // Add this prop
               />
             );
           })
@@ -225,6 +235,13 @@ export default function AdminProducts() {
           </Button>
         </div>
       )}
+
+      {/* Image Gallery Modal */}
+      <ImageGalleryModal
+        images={galleryImages}
+        isOpen={galleryOpen}
+        onClose={() => setGalleryOpen(false)}
+      />
 
       {/* Add/Edit Product Sheet */}
       <Sheet
