@@ -104,6 +104,12 @@ export default function AdminProducts() {
       }
     }
 
+    // ✅ Ensure sale price doesn’t exceed price
+    if (parseFloat(formData.salePrice) > parseFloat(formData.price)) {
+      toast.error("Sale price cannot exceed original price.");
+      return;
+    }
+
     // ✅ Check if at least one image is uploaded
     if (uploadedImageUrls.length === 0) {
       toast.error("Please upload at least one product image.");
