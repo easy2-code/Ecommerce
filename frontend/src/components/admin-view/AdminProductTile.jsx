@@ -12,11 +12,12 @@ export default function AdminProductTile({ product, onEdit, onDelete }) {
   return (
     <Card className="group relative bg-white rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden">
       {/* Image Section */}
-      <div className="relative">
+      <div className="relative bg-gray-100">
+        {" "}
         <img
           src={imageSrc}
           alt={product?.title}
-          className="w-full h-56 object-cover transition-transform duration-300 group-hover:scale-105"
+          className="w-full h-56 object-contain transition-transform duration-300 "
         />
         {product?.salePrice > 0 && (
           <span className="absolute top-3 left-3 bg-black text-white text-xs font-semibold px-2 py-1 rounded-md shadow-sm">
@@ -25,7 +26,7 @@ export default function AdminProductTile({ product, onEdit, onDelete }) {
         )}
       </div>
 
-      {/* Content Section */}
+      {/* Product Info */}
       <CardContent className="p-4">
         <h2 className="text-lg font-semibold text-gray-900 truncate">
           {product?.title}
@@ -53,14 +54,13 @@ export default function AdminProductTile({ product, onEdit, onDelete }) {
         </div>
       </CardContent>
 
-      {/* Footer Actions */}
+      {/* Action Buttons */}
       <CardFooter className="flex justify-end gap-2 border-t p-3 bg-gray-50">
-        <Button onClick={() => onEdit(product)}>
+        <Button className="cursor-pointer" onClick={() => onEdit(product)}>
           <Edit size={16} />
           Edit
         </Button>
-
-        <Button onClick={onDelete}>
+        <Button className="cursor-pointer" onClick={onDelete}>
           <Trash2 size={16} />
           Delete
         </Button>

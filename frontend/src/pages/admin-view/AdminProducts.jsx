@@ -193,14 +193,6 @@ export default function AdminProducts() {
           </div>
         ) : productList && productList.length > 0 ? (
           productList.slice(0, visibleCount).map((item, index) => {
-            // Debug: Check what keys are available
-            console.log("Product:", {
-              _id: item._id,
-              id: item.id,
-              title: item.title,
-              index: index,
-            });
-
             return (
               <AdminProductTile
                 key={item._id || item.id || `product-${index}`}
@@ -286,12 +278,15 @@ export default function AdminProducts() {
           </AlertDialogHeader>
           <AlertDialogFooter className="flex justify-end gap-2">
             <Button
+              className="cursor-pointer"
               variant="outline"
               onClick={() => setDeleteDialogOpen(false)}
             >
               Cancel
             </Button>
-            <Button onClick={confirmDelete}>Delete</Button>
+            <Button className="cursor-pointer" onClick={confirmDelete}>
+              Delete
+            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
