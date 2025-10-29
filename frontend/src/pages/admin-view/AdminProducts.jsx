@@ -3,6 +3,7 @@ import ProductImageUpload from "@/components/admin-view/ProductImageUpload";
 import CommonForm from "@/components/common/CommonForm";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
+import { PackageIcon } from "lucide-react"; // or any icon you like
 import {
   Sheet,
   SheetContent,
@@ -176,9 +177,12 @@ export default function AdminProducts() {
             />
           ))
         ) : (
-          <p className="text-gray-500 col-span-full text-center">
-            No products found.
-          </p>
+          <div className="col-span-full flex flex-col items-center justify-center py-16 text-gray-500">
+            <PackageIcon className="w-12 h-12 mb-4" />
+            <p className="text-center text-lg font-medium">
+              No products found.
+            </p>
+          </div>
         )}
       </div>
 
