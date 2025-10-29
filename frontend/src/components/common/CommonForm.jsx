@@ -10,7 +10,7 @@ import {
 } from "../ui/select";
 import { Textarea } from "../ui/textarea";
 import { Button } from "../ui/button";
-import { EyeIcon, EyeOffIcon } from "lucide-react"; // icons for password toggle
+import { EyeIcon, EyeOffIcon } from "lucide-react";
 
 export default function CommonForm({
   formControls,
@@ -20,17 +20,41 @@ export default function CommonForm({
   buttonText,
   disabled,
 }) {
-  const [showPassword, setShowPassword] = useState(false); // track password visibility
+  const [showPassword, setShowPassword] = useState(false);
+  const [errors, setErrors] = useState({}); // ✅ track field errors
+
+  // ✅ validation function
+  const validateForm = () => {
+    const newErrors = {};
+
+    formControls.forEach((control) => {
+      if (control.required && !formData[control.name]?.trim()) {
+        newErrors[control.name] = `${
+          control.label || control.name
+        } is required`;
+      }
+    });
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // ✅ wrap onSubmit with validation
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (validateForm()) {
+      onSubmit(e);
+    }
+  };
 
   function renderInputsByComponentType(getControlItem) {
-    let element = null;
     const value = formData[getControlItem.name] || "";
+    const hasError = errors[getControlItem.name];
 
     switch (getControlItem.componentType) {
       case "input":
-        // Password input with eye toggle
         if (getControlItem.type === "password") {
-          element = (
+          return (
             <div className="relative w-full">
               <Input
                 name={getControlItem.name}
@@ -38,12 +62,13 @@ export default function CommonForm({
                 id={getControlItem.name}
                 type={showPassword ? "text" : "password"}
                 value={value}
-                onChange={(event) =>
+                onChange={(e) =>
                   setFormData({
                     ...formData,
-                    [getControlItem.name]: event.target.value,
+                    [getControlItem.name]: e.target.value,
                   })
                 }
+                className={hasError ? "border-red-500" : ""}
               />
               <button
                 type="button"
@@ -59,92 +84,94 @@ export default function CommonForm({
             </div>
           );
         } else {
-          element = (
+          return (
             <Input
               name={getControlItem.name}
               placeholder={getControlItem.placeholder}
               id={getControlItem.name}
               type={getControlItem.type}
               value={value}
-              onChange={(event) =>
+              onChange={(e) =>
                 setFormData({
                   ...formData,
-                  [getControlItem.name]: event.target.value,
+                  [getControlItem.name]: e.target.value,
                 })
               }
+              className={hasError ? "border-red-500" : ""}
             />
           );
         }
-        break;
+
       case "select":
-        element = (
+        return (
           <Select
-            onValueChange={(value) =>
-              setFormData({
-                ...formData,
-                [getControlItem.name]: value,
-              })
+            onValueChange={(val) =>
+              setFormData({ ...formData, [getControlItem.name]: val })
             }
             value={value}
           >
-            <SelectTrigger className="w-full">
+            <SelectTrigger
+              className={`w-full ${hasError ? "border-red-500" : ""}`}
+            >
               <SelectValue placeholder={getControlItem.placeholder} />
             </SelectTrigger>
             <SelectContent>
-              {getControlItem.options && getControlItem.options.length > 0
-                ? getControlItem.options.map((optionItem) => (
-                    <SelectItem key={optionItem.id} value={optionItem.id}>
-                      {optionItem.label}
-                    </SelectItem>
-                  ))
-                : null}
+              {getControlItem.options?.map((optionItem) => (
+                <SelectItem key={optionItem.id} value={optionItem.id}>
+                  {optionItem.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         );
-        break;
+
       case "textarea":
-        element = (
+        return (
           <Textarea
             name={getControlItem.name}
             placeholder={getControlItem.placeholder}
             id={getControlItem.name}
             value={value}
-            onChange={(event) =>
+            onChange={(e) =>
               setFormData({
                 ...formData,
-                [getControlItem.name]: event.target.value,
+                [getControlItem.name]: e.target.value,
               })
             }
+            className={hasError ? "border-red-500" : ""}
           />
         );
-        break;
+
       default:
-        element = (
+        return (
           <Input
             name={getControlItem.name}
             placeholder={getControlItem.label}
             id={getControlItem.name}
             type={getControlItem.type}
             value={value}
-            onChange={(event) =>
+            onChange={(e) =>
               setFormData({
                 ...formData,
-                [getControlItem.name]: event.target.value,
+                [getControlItem.name]: e.target.value,
               })
             }
+            className={hasError ? "border-red-500" : ""}
           />
         );
-        break;
     }
-    return element;
   }
+
   return (
-    <form onSubmit={onSubmit}>
+    <form onSubmit={handleSubmit}>
       <div className="flex flex-col gap-4">
         {formControls.map((controlItem) => (
           <div className="grid w-full gap-1.5" key={controlItem.name}>
             <Label className="mb-1">{controlItem.label}</Label>
             {renderInputsByComponentType(controlItem)}
+            {errors[controlItem.name] && (
+              <p className="text-red-500 text-sm">{errors[controlItem.name]}</p>
+            )}
           </div>
         ))}
       </div>

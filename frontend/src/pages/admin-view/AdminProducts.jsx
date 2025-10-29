@@ -84,19 +84,44 @@ export default function AdminProducts() {
   // Submit handler for add/update
   const onSubmit = (event) => {
     event.preventDefault();
+
+    // ✅ Form validation
+    const requiredFields = [
+      "title",
+      "description",
+      "category",
+      "brand",
+      "price",
+      "salePrice",
+      "totalStock",
+    ];
+
+    // Check if any required field is empty
+    for (const field of requiredFields) {
+      if (!formData[field] || formData[field].toString().trim() === "") {
+        toast.error(`Please fill the "${field}" field before submitting.`);
+        return;
+      }
+    }
+
+    // ✅ Check if at least one image is uploaded
+    if (uploadedImageUrls.length === 0) {
+      toast.error("Please upload at least one product image.");
+      return;
+    }
+
     setLoadingAdd(true);
 
     const action = editingProduct
-      ? editProduct({ id: editingProduct._id, updates: formData }) // edit
-      : addNewProduct({ ...formData, image: uploadedImageUrls }); // add
+      ? editProduct({ id: editingProduct._id, updates: formData })
+      : addNewProduct({ ...formData, image: uploadedImageUrls });
 
     dispatch(action).then((data) => {
       setLoadingAdd(false);
 
-      // ✅ Check payload existence instead of `success`
       if (data?.payload) {
         dispatch(fetchAllProducts());
-        setOpenCreateProductDialog(false); // close the sheet
+        setOpenCreateProductDialog(false);
         setImageFiles([]);
         setUploadedImageUrls([]);
         setImageLoadingState([]);

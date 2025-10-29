@@ -1,4 +1,3 @@
-// controllers/admin/products.controller.js
 import { imageUploadUtil } from "../../helpers/cloudinary.js";
 import Products from "../../models/product.model.js";
 
@@ -22,7 +21,6 @@ export const handleImageUpload = async (req, res) => {
       result,
     });
   } catch (error) {
-    // console.error("Image upload error:", error);
     res.status(500).json({
       success: false,
       message: "Error occurred while uploading image",
@@ -30,7 +28,7 @@ export const handleImageUpload = async (req, res) => {
   }
 };
 
-// ✅ Add a new product
+// ✅ Add a new product (with server-side validation)
 export const addProduct = async (req, res) => {
   try {
     const {
@@ -42,29 +40,80 @@ export const addProduct = async (req, res) => {
       price,
       salePrice,
       totalStock,
-    } = req.body; // ❌ fixed: removed () from req.body()
+    } = req.body;
 
+    // 🔍 1. Required field validation
+    if (
+      !title?.trim() ||
+      !description?.trim() ||
+      !category?.trim() ||
+      !brand?.trim() ||
+      !price ||
+      !totalStock
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Missing required fields: title, description, category, brand, price, or totalStock",
+      });
+    }
+
+    // 🔍 2. Validate price/stock types
+    const numericPrice = parseFloat(price);
+    const numericSalePrice = salePrice ? parseFloat(salePrice) : null;
+    const numericStock = parseInt(totalStock, 10);
+
+    if (isNaN(numericPrice) || numericPrice <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Price must be a positive number",
+      });
+    }
+
+    if (numericSalePrice && numericSalePrice > numericPrice) {
+      return res.status(400).json({
+        success: false,
+        message: "Sale price cannot exceed original price",
+      });
+    }
+
+    if (isNaN(numericStock) || numericStock < 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Total stock must be a non-negative integer",
+      });
+    }
+
+    // 🔍 3. Image check
+    if (!Array.isArray(image) || image.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "At least one product image is required",
+      });
+    }
+
+    // ✅ 4. Create and save product
     const newlyCreatedProduct = new Products({
       image,
-      title,
-      description,
-      category,
-      brand,
-      price,
-      salePrice,
-      totalStock,
+      title: title.trim(),
+      description: description.trim(),
+      category: category.trim(),
+      brand: brand.trim(),
+      price: numericPrice,
+      salePrice: numericSalePrice,
+      totalStock: numericStock,
     });
 
     await newlyCreatedProduct.save();
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       message: "Product created successfully",
       data: newlyCreatedProduct,
     });
   } catch (error) {
-    // console.error("Add product error:", error);
-    res.status(500).json({
+    console.error("Add product error:", error);
+    return res.status(500).json({
       success: false,
       message: "Failed to create product",
     });
