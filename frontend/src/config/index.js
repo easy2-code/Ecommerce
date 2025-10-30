@@ -245,11 +245,11 @@ export const sortOptions = [
     label: "Price: High to Low",
   },
   {
-    id: "title: atoz",
+    id: "title-atoz",
     label: "Title: A to Z",
   },
   {
-    id: "title: ztoa",
+    id: "title-ztoa",
     label: "Title: Z to A",
   },
 ];

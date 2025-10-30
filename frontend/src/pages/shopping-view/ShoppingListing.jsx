@@ -1,3 +1,4 @@
+// ShoppingListing.jsx
 import ProductFilter from "@/components/shopping-view/ProductFilter";
 import ShoppingProductTile from "@/components/shopping-view/ShoppingProductTile";
 import { Button } from "@/components/ui/button";
@@ -8,30 +9,162 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { sortOptions } from "@/config";
+import { sortOptions, filterOptions } from "@/config";
 import { fetchAllFilteredProducts } from "@/store/shop/products-slice";
-import { ArrowUpDownIcon } from "lucide-react";
-import React, { useEffect } from "react";
+import { ArrowUpDownIcon, Loader2 } from "lucide-react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useSearchParams } from "react-router-dom";
 
 export default function ShoppingListing() {
   const dispatch = useDispatch();
-  const { productList } = useSelector((state) => state.shopProducts);
+  const { productList, isLoading, error } = useSelector(
+    (state) => state.shopProducts
+  );
+  const [searchParams, setSearchParams] = useSearchParams();
 
+  // Use ref to track if it's initial mount
+  const isInitialMount = useRef(true);
+  const previousFilters = useRef({ category: [], brand: [] });
+  const previousSort = useRef("title-atoz");
+
+  // Validate and sanitize URL parameters
+  const getValidatedParams = useCallback(() => {
+    const categoryParam = searchParams.get("category");
+    const brandParam = searchParams.get("brand");
+    const sortParam = searchParams.get("sort");
+
+    const validCategories = categoryParam
+      ? categoryParam
+          .split(",")
+          .filter((cat) => filterOptions.category.some((opt) => opt.id === cat))
+      : [];
+
+    const validBrands = brandParam
+      ? brandParam
+          .split(",")
+          .filter((brand) =>
+            filterOptions.brand.some((opt) => opt.id === brand)
+          )
+      : [];
+
+    const validSort = sortOptions.some((opt) => opt.id === sortParam)
+      ? sortParam
+      : "title-atoz";
+
+    return {
+      category: validCategories,
+      brand: validBrands,
+      sort: validSort,
+    };
+  }, [searchParams]);
+
+  const [filters, setFilters] = useState({
+    category: [],
+    brand: [],
+  });
+  const [sort, setSort] = useState("title-atoz");
+
+  // Initialize from URL on component mount
   useEffect(() => {
-    dispatch(fetchAllFilteredProducts());
-  }, [dispatch]);
+    const validatedParams = getValidatedParams();
+    setFilters({
+      category: validatedParams.category,
+      brand: validatedParams.brand,
+    });
+    setSort(validatedParams.sort);
+
+    // Immediately fetch products based on URL parameters
+    dispatch(fetchAllFilteredProducts(validatedParams));
+
+    // Mark mount complete
+    isInitialMount.current = false;
+  }, [dispatch, getValidatedParams]);
+
+  // Optimized: Only update URL and fetch when filters/sort actually change
+  useEffect(() => {
+    // Check if filters or sort actually changed
+    const filtersChanged =
+      JSON.stringify(filters.category) !==
+        JSON.stringify(previousFilters.current.category) ||
+      JSON.stringify(filters.brand) !==
+        JSON.stringify(previousFilters.current.brand);
+
+    const sortChanged = sort !== previousSort.current;
+
+    if (!filtersChanged && !sortChanged) {
+      return;
+    }
+
+    const timeoutId = setTimeout(() => {
+      const params = new URLSearchParams();
+
+      if (filters.category.length > 0) {
+        params.set("category", filters.category.join(","));
+      } else {
+        params.delete("category");
+      }
+
+      if (filters.brand.length > 0) {
+        params.set("brand", filters.brand.join(","));
+      } else {
+        params.delete("brand");
+      }
+
+      if (sort && sort !== "title-atoz") {
+        params.set("sort", sort);
+      } else {
+        params.delete("sort");
+      }
+
+      // Only update URL if it's different from current
+      const currentParamsString = searchParams.toString();
+      const newParamsString = params.toString();
+
+      if (currentParamsString !== newParamsString) {
+        setSearchParams(params);
+      }
+
+      // Only dispatch if filters/sort actually changed
+      dispatch(fetchAllFilteredProducts({ ...filters, sort }));
+
+      // Update previous values
+      previousFilters.current = { ...filters };
+      previousSort.current = sort;
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [filters, sort, dispatch, setSearchParams, searchParams]);
+
+  const handleSortChange = (newSort) => {
+    setSort(newSort);
+  };
+
+  const handleFilterChange = useCallback((newFilters) => {
+    setFilters(newFilters);
+  }, []);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] gap-6 p-4 md:p-6">
-      <ProductFilter />
+      <ProductFilter
+        onFilterChange={handleFilterChange}
+        initialFilters={filters}
+      />
+
       <div className="bg-background w-full rounded-lg shadow-sm">
         <div className="p-4 border-b flex items-center justify-between">
           <h2 className="text-lg font-extrabold">All Products</h2>
           <div className="flex items-center gap-3">
-            <span className="text-muted-foreground">
-              {productList?.length || 0} Products
-            </span>
+            {isLoading ? (
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Loading...</span>
+              </div>
+            ) : (
+              <span className="text-muted-foreground">
+                {productList?.length || 0} Products
+              </span>
+            )}
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -39,6 +172,7 @@ export default function ShoppingListing() {
                   variant="outline"
                   size="sm"
                   className="flex items-center gap-1"
+                  disabled={isLoading}
                 >
                   <ArrowUpDownIcon className="h-4 w-4" />
                   <span>Sort by</span>
@@ -46,9 +180,15 @@ export default function ShoppingListing() {
               </DropdownMenuTrigger>
 
               <DropdownMenuContent align="end" className="w-[200px]">
-                <DropdownMenuRadioGroup>
+                <DropdownMenuRadioGroup
+                  value={sort}
+                  onValueChange={handleSortChange}
+                >
                   {sortOptions.map((sortItem) => (
-                    <DropdownMenuRadioItem key={sortItem.id}>
+                    <DropdownMenuRadioItem
+                      key={sortItem.id}
+                      value={sortItem.id}
+                    >
                       {sortItem.label}
                     </DropdownMenuRadioItem>
                   ))}
@@ -58,9 +198,25 @@ export default function ShoppingListing() {
           </div>
         </div>
 
-        {/* Render all products using ShoppingProductTile */}
+        {/* Error Display */}
+        {error && (
+          <div className="m-4 p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
+            <p className="text-destructive text-sm">{error}</p>
+          </div>
+        )}
+
+        {/* Render products */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 p-6">
-          {productList && productList.length > 0 ? (
+          {isLoading ? (
+            // Loading skeleton
+            Array.from({ length: 8 }).map((_, index) => (
+              <div key={index} className="animate-pulse">
+                <div className="bg-gray-200 h-64 rounded-lg mb-2"></div>
+                <div className="bg-gray-200 h-4 rounded w-3/4 mb-2"></div>
+                <div className="bg-gray-200 h-4 rounded w-1/2"></div>
+              </div>
+            ))
+          ) : productList?.length ? (
             productList.map((product) => (
               <ShoppingProductTile key={product._id} product={product} />
             ))
