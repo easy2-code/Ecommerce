@@ -88,7 +88,12 @@ export const loginUser = async (req, res) => {
     }
 
     const token = jwt.sign(
-      { id: user._id, role: user.role, email: user.email },
+      {
+        id: user._id,
+        role: user.role,
+        email: user.email,
+        userName: user.userName,
+      },
       process.env.JWT_SECRET,
       { expiresIn: "10h" } // Short-lived token
     );
@@ -103,7 +108,12 @@ export const loginUser = async (req, res) => {
       .json({
         success: true,
         message: "Login successful",
-        user: { id: user._id, email: user.email, role: user.role },
+        user: {
+          id: user._id,
+          email: user.email,
+          role: user.role,
+          userName: user.userName,
+        },
       });
   } catch (error) {
     console.error("❌ Login Error:", error);
