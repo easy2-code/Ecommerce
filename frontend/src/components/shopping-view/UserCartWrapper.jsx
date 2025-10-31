@@ -36,7 +36,7 @@ export default function UserCartWrapper() {
 
   return (
     <SheetContent
-      className="sm:max-w-md p-6 bg-white shadow-md"
+      className="w-[330px] sm:w-auto max-w-md sm:max-w-lg md:max-w-xl p-6 bg-white shadow-md"
       aria-describedby={undefined}
     >
       <SheetHeader>
@@ -68,7 +68,7 @@ export default function UserCartWrapper() {
         <>
           <div className="mt-6 flex justify-between font-bold text-gray-800 text-lg">
             <span>Total Amount</span>
-            <span>${total}</span>
+            <span>${total.toFixed(2)}</span>
           </div>
 
           <Button className="w-full mt-6">Check Out</Button>
