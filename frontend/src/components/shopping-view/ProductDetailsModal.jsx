@@ -1,11 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { Separator } from "../ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { brandOptionMap, categoryOptionMap } from "@/config";
-import { Star } from "lucide-react";
+import { Star, ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function ProductDetailsModal({
   open,
@@ -15,9 +15,18 @@ export default function ProductDetailsModal({
 }) {
   if (!productDetails && !isLoading) return null;
 
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
   // Example average rating & total reviews (replace with real data if available)
   const averageRating = 4.2;
   const totalReviews = 10;
+
+  // Get images array from productDetails
+  const images = Array.isArray(productDetails?.image)
+    ? productDetails.image
+    : productDetails?.image
+    ? [productDetails.image]
+    : [];
 
   // Function to render filled/empty stars
   const renderStars = (rating) => {
@@ -35,6 +44,24 @@ export default function ProductDetailsModal({
     return stars;
   };
 
+  // Navigation functions
+  const goToNextImage = () => {
+    setCurrentImageIndex((prev) => (prev + 1) % images.length);
+  };
+
+  const goToPrevImage = () => {
+    setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
+  };
+
+  const goToImage = (index) => {
+    setCurrentImageIndex(index);
+  };
+
+  // Reset image index when modal opens/closes or product changes
+  React.useEffect(() => {
+    setCurrentImageIndex(0);
+  }, [open, productDetails]);
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent
@@ -43,22 +70,95 @@ export default function ProductDetailsModal({
        bg-white rounded-2xl p-4 sm:p-10
        shadow-2xl grid grid-cols-1 lg:grid-cols-2 gap-6 overflow-hidden"
       >
-        {/* LEFT: Product image */}
-        <div className="relative flex items-center justify-center bg-gray-50 rounded-xl overflow-hidden p-3">
-          {productDetails?.salePrice > 0 && (
-            <Badge className="absolute top-4 left-4 bg-red-500 text-white text-sm px-3 py-1 rounded-md shadow-md z-10">
-              On Sale
-            </Badge>
+        {/* LEFT: Product image with navigation */}
+        <div className="relative flex flex-col gap-4">
+          {/* Main Image Container */}
+          <div className="relative flex items-center justify-center bg-gray-50 rounded-xl overflow-hidden p-3 min-h-[400px]">
+            {/* Sale Badge */}
+            {productDetails?.salePrice > 0 && (
+              <Badge className="absolute top-4 left-4 bg-red-500 text-white text-sm px-3 py-1 rounded-md shadow-md z-10">
+                On Sale
+              </Badge>
+            )}
+
+            {/* Previous Button */}
+            {images.length > 1 && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={goToPrevImage}
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white text-gray-700 border shadow-lg z-20 h-10 w-10"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </Button>
+            )}
+
+            {/* Main Image */}
+            <img
+              src={images[currentImageIndex]}
+              alt={productDetails?.title}
+              className="w-full h-auto max-h-[400px] object-contain rounded-lg"
+            />
+
+            {/* Next Button */}
+            {images.length > 1 && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={goToNextImage}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white text-gray-700 border shadow-lg z-20 h-10 w-10"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </Button>
+            )}
+
+            {/* Image Counter */}
+            {images.length > 1 && (
+              <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 bg-black/70 text-white text-xs px-2 py-1 rounded-full z-10">
+                {currentImageIndex + 1} / {images.length}
+              </div>
+            )}
+          </div>
+
+          {/* Thumbnail Navigation */}
+          {images.length > 1 && (
+            <div className="flex gap-2 justify-center overflow-x-auto py-2">
+              {images.map((image, index) => (
+                <button
+                  key={index}
+                  onClick={() => goToImage(index)}
+                  className={`flex-shrink-0 w-12 h-12 border-2 rounded-md overflow-hidden transition-all duration-200 ${
+                    index === currentImageIndex
+                      ? "border-black border-2 shadow-md"
+                      : "border-gray-300 hover:border-gray-400 hover:shadow-sm"
+                  }`}
+                >
+                  <img
+                    src={image}
+                    alt={`Thumbnail ${index + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                </button>
+              ))}
+            </div>
           )}
-          <img
-            src={
-              Array.isArray(productDetails?.image)
-                ? productDetails?.image[0]
-                : productDetails?.image
-            }
-            alt={productDetails?.title}
-            className="w-full h-auto max-h-[450px] object-cover rounded-lg"
-          />
+
+          {/* Navigation Dots for Mobile */}
+          {images.length > 1 && (
+            <div className="flex justify-center gap-2 sm:hidden">
+              {images.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => goToImage(index)}
+                  className={`w-2 h-2 rounded-full transition-all ${
+                    index === currentImageIndex
+                      ? "bg-black w-4"
+                      : "bg-gray-300 hover:bg-gray-400"
+                  }`}
+                />
+              ))}
+            </div>
+          )}
         </div>
 
         {/* RIGHT: Product Info */}
