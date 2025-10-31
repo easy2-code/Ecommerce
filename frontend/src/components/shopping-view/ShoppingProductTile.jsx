@@ -1,21 +1,34 @@
 // components/shopping-view/ShoppingProductTile.jsx:
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardFooter } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { brandOptionMap, categoryOptionMap } from "@/config";
+import { Spinner } from "@/components/ui/spinner";
 
 export default function ShoppingProductTile({
   product,
   handleGetProductDetails,
   handleAddtoCart,
 }) {
+  const [isAdding, setIsAdding] = useState(false);
   // Get the first image if it's an array
   const imageSrc = Array.isArray(product?.image)
     ? product.image[0]
     : product?.image;
 
   const isOutOfStock = product?.totalStock === 0;
+
+  const handleAdd = async (productId) => {
+    setIsAdding(true);
+
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 600)); // 200ms delay
+      await handleAddtoCart(productId);
+    } finally {
+      setIsAdding(false);
+    }
+  };
 
   return (
     <Card className="w-full max-w-sm mx-auto group hover:shadow-lg transition-all duration-300">
@@ -87,11 +100,16 @@ export default function ShoppingProductTile({
       {/* Add to Cart Button */}
       <CardFooter className="p-4 pt-0">
         <Button
-          onClick={() => handleAddtoCart(product?._id)}
-          className="w-full bg-black hover:bg-gray-800 text-white"
-          disabled={isOutOfStock}
+          onClick={() => handleAdd(product?._id)}
+          className="w-full bg-black hover:bg-gray-800 text-white flex items-center justify-center gap-2"
+          disabled={isOutOfStock || isAdding}
         >
-          {isOutOfStock ? "Unavailable" : "Add to cart"}
+          {isAdding && <Spinner className="h-4 w-4" />}
+          {isOutOfStock
+            ? "Unavailable"
+            : isAdding
+            ? "Adding..."
+            : "Add to cart"}
         </Button>
       </CardFooter>
     </Card>
