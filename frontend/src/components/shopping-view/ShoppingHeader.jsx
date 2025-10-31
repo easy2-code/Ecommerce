@@ -93,7 +93,7 @@ function HeaderRightContent() {
 
           {/* 🔢 Badge showing cart item count */}
           <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-            {cartItems?.items?.length || 0}
+            {cartItems?.reduce((total, item) => total + item.quantity, 0) || 0}
           </span>
         </Button>
 

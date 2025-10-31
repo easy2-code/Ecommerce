@@ -13,10 +13,10 @@ export default function UserCartWrapper() {
 
   // Fetch cart whenever user changes or when cart updates
   useEffect(() => {
-    if (user?._id) {
-      dispatch(fetchCartItems(user._id));
+    if (user?.id) {
+      dispatch(fetchCartItems(user.id));
     }
-  }, [dispatch, user?._id]);
+  }, [dispatch, user?.id]);
 
   // Calculate total price
   const total = cartItems.reduce((sum, item) => {
@@ -24,15 +24,24 @@ export default function UserCartWrapper() {
     return sum + price * item.quantity;
   }, 0);
 
+  // Calculate total quantity of all items
+  const totalItemsCount = cartItems.reduce(
+    (sum, item) => sum + item.quantity,
+    0
+  );
+
   return (
     <SheetContent className="sm:max-w-md p-6 bg-white shadow-md">
-      {" "}
       <SheetHeader>
-        {" "}
-        <SheetTitle className="text-lg font-semibold">
-          Your Cart
-        </SheetTitle>{" "}
+        <SheetTitle className="text-lg font-semibold">Your Cart</SheetTitle>
+        {/* Total items count */}
+        {cartItems.length > 0 && (
+          <p className="text-sm text-gray-500 mt-1">
+            {totalItemsCount} item{totalItemsCount > 1 ? "s" : ""} in cart
+          </p>
+        )}
       </SheetHeader>
+
       {isLoading ? (
         <div className="text-center text-gray-500 mt-6">Loading...</div>
       ) : cartItems.length === 0 ? (
@@ -46,6 +55,7 @@ export default function UserCartWrapper() {
           ))}
         </div>
       )}
+
       {cartItems.length > 0 && (
         <>
           <div className="mt-6 flex justify-between font-bold text-gray-800 text-lg">
