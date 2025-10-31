@@ -5,7 +5,7 @@ import { SheetContent, SheetHeader, SheetTitle } from "../ui/sheet";
 import { Button } from "../ui/button";
 import { fetchCartItems } from "@/store/shop/cart-slice";
 import UserCartItemsContent from "./UserCartItemsContent";
-import { BrushCleaning } from "lucide-react";
+import { BrushCleaning, PackageIcon } from "lucide-react";
 
 export default function UserCartWrapper() {
   const dispatch = useDispatch();
@@ -53,7 +53,7 @@ export default function UserCartWrapper() {
         <div className="text-center text-gray-500 mt-6">Loading...</div>
       ) : cartItems.length === 0 ? (
         <div className="text-center text-gray-500 mt-6 flex flex-col items-center gap-2">
-          <BrushCleaning className="w-12 h-12 text-gray-400" />
+          <PackageIcon className="w-12 h-12 text-gray-400" />
           <span>Your cart is empty.</span>
         </div>
       ) : (

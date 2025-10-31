@@ -16,7 +16,12 @@ import {
   fetchAllFilteredProducts,
   fetchProductDetails,
 } from "@/store/shop/products-slice";
-import { ArrowUpDownIcon, Loader2 } from "lucide-react";
+import {
+  ArrowUpDownIcon,
+  BrushCleaning,
+  Loader2,
+  PackageIcon,
+} from "lucide-react";
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useSearchParams } from "react-router-dom";
@@ -275,7 +280,8 @@ export default function ShoppingListing() {
             ))
           ) : (
             <div className="col-span-full text-center py-12">
-              <div className="text-gray-400 text-lg">No products found</div>
+              <PackageIcon className="mx-auto w-12 h-12 text-gray-400" />
+              <h3 className="text-gray-400 text-lg mt-4">No products found</h3>
               <p className="text-gray-500 mt-2">
                 Try adjusting your filters or search terms.
               </p>

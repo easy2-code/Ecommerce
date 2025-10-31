@@ -45,7 +45,7 @@ export default function ProductFilter({ onFilterChange, initialFilters }) {
 
   return (
     <div className="bg-background rounded-lg shadow-sm sticky top-4">
-      <div className="p-4 border-b flex justify-between items-center">
+      <div className="p-4 border-b flex justify-between items-center mt-1">
         <h2 className="text-lg font-extrabold">Filters</h2>
         {hasActiveFilters && (
           <Button
