@@ -47,7 +47,7 @@ export const addToCart = async (req, res) => {
     const populatedCart = await Cart.findById(cart._id).populate({
       path: "items.productId",
       model: "Product",
-      select: "title price image description",
+      select: "title price image description salePrice",
     });
 
     res.status(200).json({
@@ -72,7 +72,7 @@ export const fetchCartItems = async (req, res) => {
 
     const cart = await Cart.findOne({ userId }).populate({
       path: "items.productId",
-      select: "title price image description", // choose which fields you want
+      select: "title price image description salePrice", // choose which fields you want
     });
 
     if (!cart) {
@@ -198,7 +198,7 @@ export const deleteCartItem = async (req, res) => {
     // repopulate so frontend gets full product info again
     const populatedCart = await Cart.findById(cart._id).populate({
       path: "items.productId",
-      select: "title price image description",
+      select: "title price image description salePrice",
     });
 
     res.status(200).json({

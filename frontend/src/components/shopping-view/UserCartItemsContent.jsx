@@ -1,3 +1,4 @@
+// components/shopping-view/UserCartItemsContent.jsx
 import React, { useState } from "react";
 import { Button } from "../ui/button";
 import { Minus, Plus, Trash, Loader2 } from "lucide-react";
