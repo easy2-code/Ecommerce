@@ -1,23 +1,34 @@
+// components/shopping-view/ShoppingProductTile.jsx:
 import React from "react";
 import { Card, CardContent, CardFooter } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { brandOptionMap, categoryOptionMap } from "@/config";
 
-export default function ShoppingProductTile({ product }) {
+export default function ShoppingProductTile({
+  product,
+  handleGetProductDetails,
+}) {
   // Get the first image if it's an array
   const imageSrc = Array.isArray(product?.image)
     ? product.image[0]
     : product?.image;
 
+  const isOutOfStock = product?.totalStock === 0;
+
   return (
     <Card className="w-full max-w-sm mx-auto group hover:shadow-lg transition-all duration-300">
-      <div className="relative overflow-hidden">
+      <div
+        onClick={() => handleGetProductDetails(product?._id)}
+        className="relative overflow-hidden cursor-pointer"
+      >
         {/* Product Image */}
         <img
           src={imageSrc}
           alt={product?.title}
-          className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
+          className={`w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300 ${
+            isOutOfStock ? "opacity-60" : ""
+          }`}
         />
 
         {/* Sale Badge */}
@@ -45,7 +56,7 @@ export default function ShoppingProductTile({ product }) {
         </div>
 
         {/* Price */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 mb-2">
           {product?.salePrice > 0 ? (
             <>
               <span className="text-xl font-bold text-gray-900">
@@ -61,12 +72,24 @@ export default function ShoppingProductTile({ product }) {
             </span>
           )}
         </div>
+
+        {/* ✅ Stock Info */}
+        <p
+          className={`text-sm font-medium ${
+            isOutOfStock ? "text-red-600" : "text-green-600"
+          }`}
+        >
+          {isOutOfStock ? "Out of Stock" : `In Stock: ${product?.totalStock}`}
+        </p>
       </CardContent>
 
       {/* Add to Cart Button */}
       <CardFooter className="p-4 pt-0">
-        <Button className="w-full bg-black hover:bg-gray-800 text-white">
-          Add to cart
+        <Button
+          className="w-full bg-black hover:bg-gray-800 text-white"
+          disabled={isOutOfStock}
+        >
+          {isOutOfStock ? "Unavailable" : "Add to cart"}
         </Button>
       </CardFooter>
     </Card>

@@ -1,4 +1,5 @@
 // ShoppingListing.jsx
+import ProductDetailsModal from "@/components/shopping-view/ProductDetailsModal";
 import ProductFilter from "@/components/shopping-view/ProductFilter";
 import ShoppingProductTile from "@/components/shopping-view/ShoppingProductTile";
 import { Button } from "@/components/ui/button";
@@ -10,7 +11,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { sortOptions, filterOptions } from "@/config";
-import { fetchAllFilteredProducts } from "@/store/shop/products-slice";
+import {
+  fetchAllFilteredProducts,
+  fetchProductDetails,
+} from "@/store/shop/products-slice";
 import { ArrowUpDownIcon, Loader2 } from "lucide-react";
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -18,10 +22,15 @@ import { useSearchParams } from "react-router-dom";
 
 export default function ShoppingListing() {
   const dispatch = useDispatch();
-  const { productList, isLoading, error } = useSelector(
-    (state) => state.shopProducts
-  );
+  const {
+    productList,
+    productDetails,
+    isProductListLoading,
+    isProductDetailsLoading,
+    error,
+  } = useSelector((state) => state.shopProducts);
   const [searchParams, setSearchParams] = useSearchParams();
+  const [open, setOpen] = useState(false);
 
   // Use ref to track if it's initial mount
   const isInitialMount = useRef(true);
@@ -144,6 +153,14 @@ export default function ShoppingListing() {
     setFilters(newFilters);
   }, []);
 
+  function handleGetProductDetails(getCurrentProductId) {
+    dispatch(fetchProductDetails(getCurrentProductId)).then(() =>
+      setOpen(true)
+    );
+  }
+
+  console.log(productDetails);
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] gap-6 p-4 md:p-6">
       <ProductFilter
@@ -155,7 +172,7 @@ export default function ShoppingListing() {
         <div className="p-4 border-b flex items-center justify-between">
           <h2 className="text-lg font-extrabold">All Products</h2>
           <div className="flex items-center gap-3">
-            {isLoading ? (
+            {isProductListLoading ? (
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin" />
                 <span>Loading...</span>
@@ -172,7 +189,7 @@ export default function ShoppingListing() {
                   variant="outline"
                   size="sm"
                   className="flex items-center gap-1"
-                  disabled={isLoading}
+                  disabled={isProductListLoading}
                 >
                   <ArrowUpDownIcon className="h-4 w-4" />
                   <span>Sort by</span>
@@ -207,7 +224,7 @@ export default function ShoppingListing() {
 
         {/* Render products */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 p-6">
-          {isLoading ? (
+          {isProductListLoading ? (
             // Loading skeleton
             Array.from({ length: 8 }).map((_, index) => (
               <div key={index} className="animate-pulse">
@@ -218,7 +235,11 @@ export default function ShoppingListing() {
             ))
           ) : productList?.length ? (
             productList.map((product) => (
-              <ShoppingProductTile key={product._id} product={product} />
+              <ShoppingProductTile
+                handleGetProductDetails={handleGetProductDetails}
+                key={product._id}
+                product={product}
+              />
             ))
           ) : (
             <div className="col-span-full text-center py-12">
@@ -230,6 +251,13 @@ export default function ShoppingListing() {
           )}
         </div>
       </div>
+
+      <ProductDetailsModal
+        open={open}
+        setOpen={setOpen}
+        productDetails={productDetails}
+        isLoading={isProductDetailsLoading}
+      />
     </div>
   );
 }
