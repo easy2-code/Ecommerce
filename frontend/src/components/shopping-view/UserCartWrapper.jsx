@@ -5,6 +5,7 @@ import { SheetContent, SheetHeader, SheetTitle } from "../ui/sheet";
 import { Button } from "../ui/button";
 import { fetchCartItems } from "@/store/shop/cart-slice";
 import UserCartItemsContent from "./UserCartItemsContent";
+import { BrushCleaning } from "lucide-react";
 
 export default function UserCartWrapper() {
   const dispatch = useDispatch();
@@ -34,7 +35,10 @@ export default function UserCartWrapper() {
   );
 
   return (
-    <SheetContent className="sm:max-w-md p-6 bg-white shadow-md">
+    <SheetContent
+      className="sm:max-w-md p-6 bg-white shadow-md"
+      aria-describedby={undefined}
+    >
       <SheetHeader>
         <SheetTitle className="text-lg font-semibold">Your Cart</SheetTitle>
         {/* Total items count */}
@@ -48,8 +52,9 @@ export default function UserCartWrapper() {
       {isLoading ? (
         <div className="text-center text-gray-500 mt-6">Loading...</div>
       ) : cartItems.length === 0 ? (
-        <div className="text-center text-gray-500 mt-6">
-          Your cart is empty.
+        <div className="text-center text-gray-500 mt-6 flex flex-col items-center gap-2">
+          <BrushCleaning className="w-12 h-12 text-gray-400" />
+          <span>Your cart is empty.</span>
         </div>
       ) : (
         <div className="mt-8 max-h-[400px] overflow-y-auto pr-2 space-y-4">

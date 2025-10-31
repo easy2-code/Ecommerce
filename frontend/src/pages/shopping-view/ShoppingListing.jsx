@@ -289,6 +289,7 @@ export default function ShoppingListing() {
         setOpen={setOpen}
         productDetails={productDetails}
         isLoading={isProductDetailsLoading}
+        handleAddtoCart={handleAddtoCart}
       />
     </div>
   );
