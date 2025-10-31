@@ -1,6 +1,6 @@
 // components/shopping-view/ShoppingHeader.jsx
 import { House, LogOut, Menu, ShoppingCart, UserCog } from "lucide-react";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Sheet, SheetContent, SheetTrigger } from "../ui/sheet";
 import { Button } from "../ui/button";
@@ -18,6 +18,8 @@ import { Avatar, AvatarFallback } from "../ui/avatar";
 import { toast } from "sonner";
 import { Spinner } from "@/components/ui/spinner";
 import { logoutUserThunk } from "@/store/auth-slice";
+import UserCartWrapper from "./UserCartWrapper";
+import { fetchCartItems } from "@/store/shop/cart-slice";
 
 /* ----------------------------------------
    Component: MenuItems
@@ -49,6 +51,8 @@ function MenuItems() {
 ----------------------------------------- */
 function HeaderRightContent() {
   const { user } = useSelector((state) => state.auth);
+  const { cartItems } = useSelector((state) => state.shopCart);
+  const [openCartSheet, setOpenCartSheet] = useState(false);
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [loading, setLoading] = React.useState(false);
@@ -70,13 +74,37 @@ function HeaderRightContent() {
       .finally(() => setLoading(false));
   };
 
+  useEffect(() => {
+    if (user?.id) dispatch(fetchCartItems(user.id));
+  }, [dispatch, user?.id]);
+
   return (
     <div className="flex lg:items-center lg:flex-row flex-col gap-4">
-      {/* Shopping Cart Button */}
-      <Button variant="outline" size="icon">
-        <ShoppingCart className="w-6 h-6" />
-        <span className="sr-only">User cart</span>
-      </Button>
+      <Sheet open={openCartSheet} onOpenChange={setOpenCartSheet}>
+        {/* Shopping Cart Button */}
+        <Button
+          onClick={() => setOpenCartSheet(true)}
+          variant="outline"
+          size="icon"
+          className="relative"
+        >
+          <ShoppingCart className="w-6 h-6" />
+          <span className="sr-only">User cart</span>
+
+          {/* 🔢 Badge showing cart item count */}
+          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+            {cartItems?.items?.length || 0}
+          </span>
+        </Button>
+
+        <UserCartWrapper
+          cartItems={
+            cartItems && cartItems.items && cartItems.items.length > 0
+              ? cartItems.items
+              : []
+          }
+        />
+      </Sheet>
 
       {/* Dropdown Menu for User Account */}
       <DropdownMenu>

@@ -8,6 +8,7 @@ import { brandOptionMap, categoryOptionMap } from "@/config";
 export default function ShoppingProductTile({
   product,
   handleGetProductDetails,
+  handleAddtoCart,
 }) {
   // Get the first image if it's an array
   const imageSrc = Array.isArray(product?.image)
@@ -86,6 +87,7 @@ export default function ShoppingProductTile({
       {/* Add to Cart Button */}
       <CardFooter className="p-4 pt-0">
         <Button
+          onClick={() => handleAddtoCart(product?._id)}
           className="w-full bg-black hover:bg-gray-800 text-white"
           disabled={isOutOfStock}
         >

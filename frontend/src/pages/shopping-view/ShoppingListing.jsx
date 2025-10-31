@@ -1,4 +1,4 @@
-// ShoppingListing.jsx
+// components/shopping-view/ShoppingListing.jsx
 import ProductDetailsModal from "@/components/shopping-view/ProductDetailsModal";
 import ProductFilter from "@/components/shopping-view/ProductFilter";
 import ShoppingProductTile from "@/components/shopping-view/ShoppingProductTile";
@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { sortOptions, filterOptions } from "@/config";
+import { addToCart, fetchCartItems } from "@/store/shop/cart-slice";
 import {
   fetchAllFilteredProducts,
   fetchProductDetails,
@@ -19,6 +20,7 @@ import { ArrowUpDownIcon, Loader2 } from "lucide-react";
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useSearchParams } from "react-router-dom";
+import { toast } from "sonner";
 
 export default function ShoppingListing() {
   const dispatch = useDispatch();
@@ -31,7 +33,7 @@ export default function ShoppingListing() {
   } = useSelector((state) => state.shopProducts);
   const [searchParams, setSearchParams] = useSearchParams();
   const [open, setOpen] = useState(false);
-
+  const { user } = useSelector((state) => state.auth);
   // Use ref to track if it's initial mount
   const isInitialMount = useRef(true);
   const previousFilters = useRef({ category: [], brand: [] });
@@ -159,7 +161,36 @@ export default function ShoppingListing() {
     );
   }
 
-  console.log(productDetails);
+  function handleAddtoCart(getCurrentProductId) {
+    if (!user?.id) {
+      toast.error("Please login to add items to cart ❌");
+      return;
+    }
+
+    dispatch(
+      addToCart({
+        userId: user.id,
+        productId: getCurrentProductId,
+        quantity: 1,
+      })
+    )
+      .unwrap()
+      .then((payload) => {
+        // payload is the full backend response: { success, message, cart }
+        if (payload?.success) {
+          dispatch(fetchCartItems(user.id));
+          toast.success("Item added to cart 🛒", {
+            description: payload.message || "Check your cart to review items.",
+          });
+        } else {
+          toast.error(payload?.message || "Failed to add item ❌");
+        }
+      })
+      .catch((err) => {
+        // unwrap will throw the rejectWithValue content or error message
+        toast.error(err || "Something went wrong ❌");
+      });
+  }
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] gap-6 p-4 md:p-6">
@@ -239,6 +270,7 @@ export default function ShoppingListing() {
                 handleGetProductDetails={handleGetProductDetails}
                 key={product._id}
                 product={product}
+                handleAddtoCart={handleAddtoCart}
               />
             ))
           ) : (
