@@ -12,6 +12,8 @@ import {
 import { fetchAllFilteredProducts } from "@/store/shop/products-slice";
 import { useNavigate } from "react-router-dom";
 import { Spinner } from "@/components/ui/spinner";
+import { toast } from "sonner";
+import ProductDetailsModal from "@/components/shopping-view/ProductDetailsModal";
 
 // ✅ Import local images
 import img1 from "@/assets/Home-Page-Images/1.jpg";
@@ -29,6 +31,7 @@ import zaraLogo from "@/assets/Brand-logs/zara.png";
 import hmLogo from "@/assets/Brand-logs/HM.png";
 
 import { Button } from "@/components/ui/button";
+import { addToCart } from "@/store/shop/cart-slice";
 
 export default function ShoppingHome() {
   const images = [img1, img2, img3, img4, img5];
@@ -41,6 +44,10 @@ export default function ShoppingHome() {
   const intervalRef = React.useRef(null);
   const [visibleCount, setVisibleCount] = useState(20); // initially 20
   const [loadingMore, setLoadingMore] = useState(false);
+  const [addingProductIds, setAddingProductIds] = useState([]);
+  const { user } = useSelector((state) => state.auth);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
 
   // ✅ Auto change image every 4 seconds (single, clean effect)
   useEffect(() => {
@@ -128,6 +135,38 @@ export default function ShoppingHome() {
       img: hmLogo,
     },
   ];
+
+  const handleAddToCart = async (productId) => {
+    if (!user?.id) {
+      toast.error("Please login to add items to cart ❌");
+      return;
+    }
+
+    setAddingProductIds((prev) => [...prev, productId]);
+
+    try {
+      const payload = await dispatch(
+        addToCart({ userId: user.id, productId, quantity: 1 })
+      ).unwrap();
+
+      if (payload?.success) {
+        toast.success("Item added to cart 🛒", {
+          description: payload.message || "Check your cart to review items.",
+        });
+      } else {
+        toast.error(payload?.message || "Failed to add item ❌");
+      }
+    } catch (err) {
+      toast.error(err || "Something went wrong ❌");
+    } finally {
+      setAddingProductIds((prev) => prev.filter((id) => id !== productId));
+    }
+  };
+
+  const openProductModal = (product) => {
+    setSelectedProduct(product);
+    setModalOpen(true);
+  };
 
   return (
     <div>
@@ -267,7 +306,10 @@ export default function ShoppingHome() {
                       className="w-full max-w-sm mx-auto group bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden"
                     >
                       {/* ✅ Product Image */}
-                      <div className="relative overflow-hidden cursor-pointer">
+                      <div
+                        className="relative overflow-hidden cursor-pointer"
+                        onClick={() => openProductModal(product)}
+                      >
                         <img
                           src={imageSrc || "https://via.placeholder.com/300"}
                           alt={product?.title}
@@ -328,12 +370,23 @@ export default function ShoppingHome() {
                             : `In Stock: ${product?.totalStock}`}
                         </p>
 
-                        {/* ✅ View Details Button */}
+                        {/* ✅ Add To Cart Button */}
                         <Button
-                          className="w-full mt-4 py-2 px-4 text-white font-medium flex items-center justify-center transition-all duration-200"
-                          onClick={() => navigate(`/shop/listing`)}
+                          onClick={() => handleAddToCart(product._id)}
+                          className="w-full mt-4 py-2 px-4 text-white font-medium flex items-center justify-center gap-2 bg-black hover:bg-gray-800"
+                          disabled={
+                            isOutOfStock ||
+                            addingProductIds.includes(product._id)
+                          }
                         >
-                          View Details
+                          {addingProductIds.includes(product._id) && (
+                            <Spinner className="h-4 w-4" />
+                          )}
+                          {isOutOfStock
+                            ? "Unavailable"
+                            : addingProductIds.includes(product._id)
+                            ? "Adding..."
+                            : "Add to cart"}
                         </Button>
                       </div>
                     </div>
@@ -366,6 +419,16 @@ export default function ShoppingHome() {
           </div>
         )}
       </section>
+
+      {/* Product Details Modal */}
+      {selectedProduct && (
+        <ProductDetailsModal
+          open={modalOpen}
+          setOpen={setModalOpen}
+          productDetails={selectedProduct}
+          handleAddtoCart={handleAddToCart}
+        />
+      )}
     </div>
   );
 }
