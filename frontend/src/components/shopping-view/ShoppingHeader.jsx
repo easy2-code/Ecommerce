@@ -72,7 +72,7 @@ function HeaderRightContent() {
         toast.success("Logout successful ✅", {
           description: "You have been signed out successfully.",
         });
-        navigate("/auth/login");
+        navigate("/");
       })
       .catch((error) => {
         toast.error(error || "Logout failed ❌");
@@ -200,7 +200,16 @@ export default function ShoppingHeader() {
             className="w-full max-w-xs pl-6 pt-6 pr-4 bg-background"
           >
             <MenuItems onItemClick={handleNavigate} />
-            {isAuthenticated && <HeaderRightContent />}
+            {isAuthenticated ? (
+              <HeaderRightContent />
+            ) : (
+              <Button
+                onClick={() => navigate("/auth/login")}
+                className="w-full mt-4 bg-black text-white hover:bg-gray-800"
+              >
+                Sign In
+              </Button>
+            )}
           </SheetContent>
         </Sheet>
 
@@ -210,11 +219,19 @@ export default function ShoppingHeader() {
         </div>
 
         {/* Right Side */}
-        {isAuthenticated && (
-          <div className="hidden lg:block">
+        {/* Right Side */}
+        <div className="hidden lg:block">
+          {isAuthenticated ? (
             <HeaderRightContent />
-          </div>
-        )}
+          ) : (
+            <Button
+              onClick={() => navigate("/auth/login")}
+              className="bg-black text-white hover:bg-gray-800"
+            >
+              Sign In
+            </Button>
+          )}
+        </div>
       </div>
     </header>
   );
