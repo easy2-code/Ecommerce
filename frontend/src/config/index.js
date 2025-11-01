@@ -1,3 +1,4 @@
+// config/index.js
 export const registerFormControls = [
   {
     name: "userName",

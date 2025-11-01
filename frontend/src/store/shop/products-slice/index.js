@@ -7,6 +7,7 @@ const initialState = {
   isProductListLoading: false,
   isProductDetailsLoading: false,
   error: null,
+  currentFetchId: null, // ✅ Track latest fetch to cancel older ones
 };
 
 // ✅ Fetch all filtered products
@@ -14,27 +15,35 @@ export const fetchAllFilteredProducts = createAsyncThunk(
   "shoppingProducts/fetchAllProducts",
   async (
     { category = [], brand = [], sort = "" } = {},
-    { rejectWithValue }
+    { getState, signal, requestId, rejectWithValue }
   ) => {
     try {
-      const query = new URLSearchParams();
+      const { currentFetchId, isProductListLoading } = getState().shopProducts;
 
+      // 🛑 Prevent duplicate fetches while another is running
+      if (isProductListLoading && currentFetchId !== requestId) {
+        return rejectWithValue("Duplicate request canceled");
+      }
+
+      const query = new URLSearchParams();
       if (category.length) query.append("category", category.join(","));
       if (brand.length) query.append("brand", brand.join(","));
       if (sort) query.append("sort", sort);
 
       const response = await fetch(
-        `http://localhost:3000/api/shop/products/all?${query.toString()}`
+        `http://localhost:3000/api/shop/products/all?${query.toString()}`,
+        { signal } // ✅ attach signal for abort support
       );
 
       const data = await response.json();
-
-      if (!response.ok) {
+      if (!response.ok)
         throw new Error(data.message || "Failed to fetch products");
-      }
 
       return data.data;
     } catch (error) {
+      // Ignore abort errors
+      if (error.name === "AbortError")
+        return rejectWithValue("Request aborted");
       return rejectWithValue(error.message);
     }
   }
@@ -43,12 +52,12 @@ export const fetchAllFilteredProducts = createAsyncThunk(
 // ✅ Fetch product details by ID
 export const fetchProductDetails = createAsyncThunk(
   "shoppingProducts/fetchProductDetails",
-  async (id, { rejectWithValue }) => {
+  async (id, { signal, rejectWithValue }) => {
     try {
       const response = await fetch(
-        `http://localhost:3000/api/shop/products/get/${id}`
+        `http://localhost:3000/api/shop/products/get/${id}`,
+        { signal }
       );
-
       const data = await response.json();
 
       if (!response.ok) {
@@ -57,13 +66,15 @@ export const fetchProductDetails = createAsyncThunk(
 
       return data.data; // single product object
     } catch (error) {
+      if (error.name === "AbortError")
+        return rejectWithValue("Request aborted");
       return rejectWithValue(error.message);
     }
   }
 );
 
 export const ShoppingProductSlice = createSlice({
-  name: "shoppingProducts",
+  name: "shopProducts",
   initialState,
   reducers: {
     clearError: (state) => {
@@ -76,18 +87,29 @@ export const ShoppingProductSlice = createSlice({
   extraReducers: (builder) => {
     builder
       // ✅ Fetch all products
-      .addCase(fetchAllFilteredProducts.pending, (state) => {
+      .addCase(fetchAllFilteredProducts.pending, (state, action) => {
         state.isProductListLoading = true;
         state.error = null;
+        state.currentFetchId = action.meta.requestId; // Track active request
       })
       .addCase(fetchAllFilteredProducts.fulfilled, (state, action) => {
-        state.isProductListLoading = false;
-        state.productList = action.payload;
+        // ✅ Only apply if this is the latest request
+        if (state.currentFetchId === action.meta.requestId) {
+          state.isProductListLoading = false;
+          state.productList = action.payload;
+          state.currentFetchId = null;
+        }
       })
       .addCase(fetchAllFilteredProducts.rejected, (state, action) => {
-        state.isProductListLoading = false;
-        state.productList = [];
-        state.error = action.payload;
+        if (state.currentFetchId === action.meta.requestId) {
+          state.isProductListLoading = false;
+          // If the request was canceled, don’t clear the list
+          if (action.payload !== "Request aborted") {
+            state.productList = [];
+          }
+          state.error = action.payload;
+          state.currentFetchId = null;
+        }
       })
 
       // ✅ Fetch single product details
