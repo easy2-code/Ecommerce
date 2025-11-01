@@ -6,29 +6,30 @@ import { Separator } from "../ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { brandOptionMap, categoryOptionMap } from "@/config";
 import { Star, ChevronLeft, ChevronRight } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner"; // ✅ import Spinner like in ShoppingProductTile.jsx
 
 export default function ProductDetailsModal({
   open,
   setOpen,
   productDetails,
   isLoading,
+  handleAddtoCart, // ✅ added as prop (same as in ShoppingProductTile.jsx)
 }) {
   if (!productDetails && !isLoading) return null;
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [isAdding, setIsAdding] = useState(false); // ✅ for Add to Cart spinner state
 
   // Example average rating & total reviews (replace with real data if available)
   const averageRating = 4.2;
   const totalReviews = 10;
 
-  // Get images array from productDetails
   const images = Array.isArray(productDetails?.image)
     ? productDetails.image
     : productDetails?.image
     ? [productDetails.image]
     : [];
 
-  // Function to render filled/empty stars
   const renderStars = (rating) => {
     const stars = [];
     for (let i = 1; i <= 5; i++) {
@@ -44,7 +45,6 @@ export default function ProductDetailsModal({
     return stars;
   };
 
-  // Navigation functions
   const goToNextImage = () => {
     setCurrentImageIndex((prev) => (prev + 1) % images.length);
   };
@@ -57,10 +57,22 @@ export default function ProductDetailsModal({
     setCurrentImageIndex(index);
   };
 
-  // Reset image index when modal opens/closes or product changes
   React.useEffect(() => {
     setCurrentImageIndex(0);
   }, [open, productDetails]);
+
+  // ✅ same async handler from ShoppingProductTile.jsx
+  const handleAdd = async (productId) => {
+    setIsAdding(true);
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 600));
+      await handleAddtoCart(productId);
+    } finally {
+      setIsAdding(false);
+    }
+  };
+
+  const isOutOfStock = productDetails?.totalStock === 0; // ✅ same logic as in ShoppingProductTile
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -72,16 +84,13 @@ export default function ProductDetailsModal({
       >
         {/* LEFT: Product image with navigation */}
         <div className="relative flex flex-col gap-4">
-          {/* Main Image Container */}
           <div className="relative flex items-center justify-center bg-gray-50 rounded-xl overflow-hidden p-3 min-h-[400px]">
-            {/* Sale Badge */}
             {productDetails?.salePrice > 0 && (
               <Badge className="absolute top-4 left-4 bg-red-500 text-white text-sm px-3 py-1 rounded-md shadow-md z-10">
                 On Sale
               </Badge>
             )}
 
-            {/* Previous Button */}
             {images.length > 1 && (
               <Button
                 variant="ghost"
@@ -93,14 +102,12 @@ export default function ProductDetailsModal({
               </Button>
             )}
 
-            {/* Main Image */}
             <img
               src={images[currentImageIndex]}
               alt={productDetails?.title}
               className="w-full h-auto max-h-[400px] object-contain rounded-lg"
             />
 
-            {/* Next Button */}
             {images.length > 1 && (
               <Button
                 variant="ghost"
@@ -112,7 +119,6 @@ export default function ProductDetailsModal({
               </Button>
             )}
 
-            {/* Image Counter */}
             {images.length > 1 && (
               <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 bg-black/70 text-white text-xs px-2 py-1 rounded-full z-10">
                 {currentImageIndex + 1} / {images.length}
@@ -120,7 +126,6 @@ export default function ProductDetailsModal({
             )}
           </div>
 
-          {/* Thumbnail Navigation */}
           {images.length > 1 && (
             <div className="flex gap-2 justify-center overflow-x-auto py-2">
               {images.map((image, index) => (
@@ -143,7 +148,6 @@ export default function ProductDetailsModal({
             </div>
           )}
 
-          {/* Navigation Dots for Mobile */}
           {images.length > 1 && (
             <div className="flex justify-center gap-2 sm:hidden">
               {images.map((_, index) => (
@@ -169,7 +173,6 @@ export default function ProductDetailsModal({
             </DialogTitle>
           </DialogHeader>
 
-          {/* Category and Brand */}
           <div className="flex flex-wrap gap-3">
             {productDetails?.category && (
               <Badge variant="outline" className="bg-gray-100 text-gray-700">
@@ -184,7 +187,6 @@ export default function ProductDetailsModal({
             )}
           </div>
 
-          {/* Price + Rating */}
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-3">
               {productDetails?.salePrice > 0 ? (
@@ -211,34 +213,38 @@ export default function ProductDetailsModal({
             </div>
           </div>
 
-          {/* Description */}
           {productDetails?.description && (
             <p className="text-sm text-gray-700 leading-relaxed">
               {productDetails.description}
             </p>
           )}
 
-          {/* Stock info */}
           <div>
-            {productDetails?.totalStock > 0 ? (
-              <span className="text-sm text-green-600 font-semibold">
-                In Stock ({productDetails.totalStock} available)
-              </span>
-            ) : (
+            {isOutOfStock ? (
               <span className="text-sm text-red-500 font-semibold">
                 Out of Stock
+              </span>
+            ) : (
+              <span className="text-sm text-green-600 font-semibold">
+                In Stock ({productDetails?.totalStock} available)
               </span>
             )}
           </div>
 
-          {/* Fixed position buttons + Reviews stay inside the same scrollable container */}
           <div className="flex flex-col gap-4 pt-4 border-t border-gray-200 mt-4">
+            {/* ✅ Add to Cart Button (same behavior as ShoppingProductTile.jsx) */}
             <div className="flex">
               <Button
-                className="flex-1 bg-black hover:bg-gray-800 text-white text-base py-5 rounded-lg"
-                disabled={productDetails?.totalStock === 0}
+                onClick={() => handleAdd(productDetails?._id)}
+                className="flex-1 bg-black hover:bg-gray-800 text-white text-base py-5 rounded-lg flex items-center justify-center gap-2"
+                disabled={isOutOfStock || isAdding}
               >
-                Add to Cart
+                {isAdding && <Spinner className="h-4 w-4" />}
+                {isOutOfStock
+                  ? "Unavailable"
+                  : isAdding
+                  ? "Adding..."
+                  : "Add to cart"}
               </Button>
             </div>
 
