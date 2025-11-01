@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Route, Routes } from "react-router-dom";
+import { Route, Routes, useLocation } from "react-router-dom";
 
 // Auth
 import AuthLayout from "./components/auth/AuthLayout";
@@ -29,12 +29,14 @@ import UnAuth from "./pages/UnAuth/UnAuth";
 import { useDispatch, useSelector } from "react-redux";
 import { checkAuth } from "./store/auth-slice";
 import { Skeleton } from "@/components/ui/skeleton";
+import Footer from "./components/common/Footer";
 
 export default function App() {
   const { isAuthenticated, user, isLoading } = useSelector(
     (state) => state.auth
   );
   const dispatch = useDispatch();
+  const location = useLocation(); // get current route
 
   useEffect(() => {
     dispatch(checkAuth());
@@ -53,60 +55,68 @@ export default function App() {
     );
   }
 
+  // Define routes where footer should NOT appear
+  const noFooterRoutes = ["/auth/login", "/auth/register"];
+
   return (
-    <div className="flex flex-col overflow-hidden bg-white">
-      <Routes>
-        <Route path="/" element={<Home />} />
+    <div className="flex flex-col min-h-screen overflow-hidden bg-white">
+      <div className="flex-grow">
+        <Routes>
+          <Route path="/" element={<Home />} />
 
-        {/* Auth Routes */}
-        <Route
-          path="/auth"
-          element={
-            <CheckAuth isAuthenticated={isAuthenticated} user={user}>
-              <AuthLayout />
-            </CheckAuth>
-          }
-        >
-          <Route path="login" element={<Login />} />
-          <Route path="register" element={<Register />} />
-        </Route>
+          {/* Auth Routes */}
+          <Route
+            path="/auth"
+            element={
+              <CheckAuth isAuthenticated={isAuthenticated} user={user}>
+                <AuthLayout />
+              </CheckAuth>
+            }
+          >
+            <Route path="login" element={<Login />} />
+            <Route path="register" element={<Register />} />
+          </Route>
 
-        {/* Admin Routes */}
-        <Route
-          path="/admin"
-          element={
-            <CheckAuth isAuthenticated={isAuthenticated} user={user}>
-              <AdminLayout />
-            </CheckAuth>
-          }
-        >
-          <Route path="dashboard" element={<AdminDashboard />} />
-          <Route path="products" element={<AdminProducts />} />
-          <Route path="orders" element={<AdminOrders />} />
-          <Route path="features" element={<AdminFeatures />} />
-        </Route>
+          {/* Admin Routes */}
+          <Route
+            path="/admin"
+            element={
+              <CheckAuth isAuthenticated={isAuthenticated} user={user}>
+                <AdminLayout />
+              </CheckAuth>
+            }
+          >
+            <Route path="dashboard" element={<AdminDashboard />} />
+            <Route path="products" element={<AdminProducts />} />
+            <Route path="orders" element={<AdminOrders />} />
+            <Route path="features" element={<AdminFeatures />} />
+          </Route>
 
-        {/* Shopping Routes */}
-        <Route
-          path="/shop"
-          element={
-            <CheckAuth isAuthenticated={isAuthenticated} user={user}>
-              <ShoppingLayout />
-            </CheckAuth>
-          }
-        >
-          <Route path="home" element={<ShoppingHome />} />
-          <Route path="listing" element={<ShoppingListing />} />
-          <Route path="checkout" element={<ShoppingCheckout />} />
-          <Route path="account" element={<ShoppingAccount />} />
-        </Route>
+          {/* Shopping Routes */}
+          <Route
+            path="/shop"
+            element={
+              <CheckAuth isAuthenticated={isAuthenticated} user={user}>
+                <ShoppingLayout />
+              </CheckAuth>
+            }
+          >
+            <Route path="home" element={<ShoppingHome />} />
+            <Route path="listing" element={<ShoppingListing />} />
+            <Route path="checkout" element={<ShoppingCheckout />} />
+            <Route path="account" element={<ShoppingAccount />} />
+          </Route>
 
-        {/* Not Found Route */}
-        <Route path="*" element={<NotFound />} />
+          {/* Not Found */}
+          <Route path="*" element={<NotFound />} />
 
-        {/* UnAuthorized Page Route */}
-        <Route path="/unauthorized" element={<UnAuth />} />
-      </Routes>
+          {/* Unauthorized */}
+          <Route path="/unauthorized" element={<UnAuth />} />
+        </Routes>
+      </div>
+
+      {/* Render Footer only if current path is NOT in noFooterRoutes */}
+      {!noFooterRoutes.includes(location.pathname) && <Footer />}
     </div>
   );
 }
