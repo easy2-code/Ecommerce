@@ -21,6 +21,7 @@ import img2 from "@/assets/Home-Page-Images/2.jpg";
 import img3 from "@/assets/Home-Page-Images/3.jpg";
 import img4 from "@/assets/Home-Page-Images/4.jpg";
 import img5 from "@/assets/Home-Page-Images/5.jpg";
+import introVideo from "@/assets/Home-Page-Images/1.mp4";
 
 // ✅ Import Brand Logos
 import nikeLogo from "@/assets/Brand-logs/nike.png";
@@ -36,6 +37,7 @@ import { addToCart } from "@/store/shop/cart-slice";
 export default function ShoppingHome() {
   const images = [img1, img2, img3, img4, img5];
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [videoEnded, setVideoEnded] = useState(false); // track video
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { productList, isProductListLoading } = useSelector(
@@ -50,8 +52,10 @@ export default function ShoppingHome() {
   const [selectedProduct, setSelectedProduct] = useState(null);
 
   // ✅ Auto change image every 4 seconds (single, clean effect)
+  // ✅ Image slideshow only after video ends
   useEffect(() => {
-    if (intervalRef.current) return; // Prevent duplicate intervals
+    if (!videoEnded) return; // don't start interval until video ends
+    if (intervalRef.current) return;
 
     intervalRef.current = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % images.length);
@@ -61,7 +65,7 @@ export default function ShoppingHome() {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     };
-  }, [images.length]);
+  }, [videoEnded, images.length]);
 
   // ✅ Fetch all products when the page loads
   useEffect(() => {
@@ -170,29 +174,45 @@ export default function ShoppingHome() {
 
   return (
     <div>
-      {/* ✅ Image Slideshow */}
-      <div className="w-full h-screen overflow-hidden relative">
-        {images.map((src, index) => (
-          <img
-            key={index}
-            src={src}
-            alt={`Slide ${index + 1}`}
-            className={`absolute top-0 left-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${
-              index === currentIndex ? "opacity-100" : "opacity-0"
-            }`}
+      {/* ✅ Video Section */}
+      {/* ✅ Video Section */}
+      {!videoEnded && (
+        <div className="w-full h-screen overflow-hidden relative">
+          <video
+            src={introVideo}
+            className="absolute top-0 left-0 w-full h-full object-cover"
+            autoPlay
+            muted
+            onEnded={() => setVideoEnded(true)}
           />
-        ))}
-        <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex gap-2">
-          {images.map((_, i) => (
-            <div
-              key={i}
-              className={`w-3 h-3 rounded-full ${
-                i === currentIndex ? "bg-white" : "bg-gray-400"
+        </div>
+      )}
+
+      {/* ✅ Image Slideshow Section */}
+      {videoEnded && (
+        <div className="w-full h-screen overflow-hidden relative">
+          {images.map((src, index) => (
+            <img
+              key={index}
+              src={src}
+              alt={`Slide ${index + 1}`}
+              className={`absolute top-0 left-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${
+                index === currentIndex ? "opacity-100" : "opacity-0"
               }`}
             />
           ))}
+          <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex gap-2">
+            {images.map((_, i) => (
+              <div
+                key={i}
+                className={`w-3 h-3 rounded-full ${
+                  i === currentIndex ? "bg-white" : "bg-gray-400"
+                }`}
+              />
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* ✅ Categories Section */}
       <section className="py-10 bg-gray-50">
