@@ -23,8 +23,8 @@ export default function UserCartWrapper() {
   const total = cartItems.reduce((sum, item) => {
     const price =
       item?.productId?.salePrice > 0
-        ? item.productId.salePrice
-        : item.productId.price || 0;
+        ? item.productId?.salePrice
+        : item.productId?.price || 0;
     return sum + price * item.quantity;
   }, 0);
 
