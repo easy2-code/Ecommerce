@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { fetchAllFilteredProducts } from "@/store/shop/products-slice";
 import { useNavigate } from "react-router-dom";
+import { Spinner } from "@/components/ui/spinner";
 
 // ✅ Import local images
 import img1 from "@/assets/Home-Page-Images/1.jpg";
@@ -38,6 +39,8 @@ export default function ShoppingHome() {
     (state) => state.shopProducts
   );
   const intervalRef = React.useRef(null);
+  const [visibleCount, setVisibleCount] = useState(20); // initially 20
+  const [loadingMore, setLoadingMore] = useState(false);
 
   // ✅ Auto change image every 4 seconds (single, clean effect)
   useEffect(() => {
@@ -250,7 +253,7 @@ export default function ShoppingHome() {
                     : "grid-cols-5"
                 }`}
               >
-                {productList.slice(0, 10).map((product) => {
+                {productList.slice(0, visibleCount).map((product) => {
                   const imageSrc = Array.isArray(product?.image)
                     ? product.image[0]
                     : product?.image;
@@ -344,6 +347,24 @@ export default function ShoppingHome() {
             </div>
           )}
         </div>
+        {productList && visibleCount < productList.length && (
+          <div className="flex justify-center mt-6">
+            <Button
+              className="cursor-pointer flex items-center gap-2"
+              onClick={() => {
+                setLoadingMore(true);
+                setTimeout(() => {
+                  setVisibleCount((prev) => prev + 8); // show 8 more
+                  setLoadingMore(false);
+                }, 500);
+              }}
+              disabled={loadingMore}
+            >
+              {loadingMore && <Spinner className="w-4 h-4" />}
+              Show More
+            </Button>
+          </div>
+        )}
       </section>
     </div>
   );

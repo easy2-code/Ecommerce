@@ -26,6 +26,7 @@ import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
+import { Spinner } from "@/components/ui/spinner";
 
 export default function ShoppingListing() {
   const dispatch = useDispatch();
@@ -43,6 +44,8 @@ export default function ShoppingListing() {
   const isInitialMount = useRef(true);
   const previousFilters = useRef({ category: [], brand: [] });
   const previousSort = useRef("title-atoz");
+  const [visibleCount, setVisibleCount] = useState(8);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   // Validate and sanitize URL parameters
   const getValidatedParams = useCallback(() => {
@@ -270,14 +273,16 @@ export default function ShoppingListing() {
               </div>
             ))
           ) : productList?.length ? (
-            productList.map((product) => (
-              <ShoppingProductTile
-                handleGetProductDetails={handleGetProductDetails}
-                key={product._id}
-                product={product}
-                handleAddtoCart={handleAddtoCart}
-              />
-            ))
+            productList
+              .slice(0, visibleCount)
+              .map((product) => (
+                <ShoppingProductTile
+                  handleGetProductDetails={handleGetProductDetails}
+                  key={product._id}
+                  product={product}
+                  handleAddtoCart={handleAddtoCart}
+                />
+              ))
           ) : (
             <div className="col-span-full text-center py-12">
               <PackageIcon className="mx-auto w-12 h-12 text-gray-400" />
@@ -288,6 +293,24 @@ export default function ShoppingListing() {
             </div>
           )}
         </div>
+        {productList && visibleCount < productList.length && (
+          <div className="flex justify-center my-6">
+            <Button
+              className="cursor-pointer flex items-center gap-2"
+              onClick={() => {
+                setLoadingMore(true);
+                setTimeout(() => {
+                  setVisibleCount((prev) => prev + 8);
+                  setLoadingMore(false);
+                }, 500);
+              }}
+              disabled={loadingMore}
+            >
+              {loadingMore && <Spinner className="w-4 h-4" />}
+              Show More
+            </Button>
+          </div>
+        )}
       </div>
 
       <ProductDetailsModal
