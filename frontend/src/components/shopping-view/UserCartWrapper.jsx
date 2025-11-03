@@ -6,11 +6,13 @@ import { Button } from "../ui/button";
 import { fetchCartItems } from "@/store/shop/cart-slice";
 import UserCartItemsContent from "./UserCartItemsContent";
 import { BrushCleaning, PackageIcon } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function UserCartWrapper() {
   const dispatch = useDispatch();
   const { cartItems, isLoading } = useSelector((state) => state.shopCart);
   const { user } = useSelector((state) => state.auth);
+  const navigate = useNavigate();
 
   // Fetch cart whenever user changes or when cart updates
   useEffect(() => {
@@ -71,7 +73,12 @@ export default function UserCartWrapper() {
             <span>${total.toFixed(2)}</span>
           </div>
 
-          <Button className="w-full mt-6">Check Out</Button>
+          <Button
+            onClick={() => navigate("/shop/checkout")}
+            className="w-full mt-6"
+          >
+            Check Out
+          </Button>
         </>
       )}
     </SheetContent>
