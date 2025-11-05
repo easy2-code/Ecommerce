@@ -8,9 +8,19 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import React from "react";
+import React, { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import AdminOrderDetailsView from "./AdminOrderDetailsView";
 
 export default function AdminOrdersView() {
+  const [openDetailsDialog, setOpenDetailsDialog] = useState(false);
+
   return (
     <Card>
       <CardHeader>
@@ -38,7 +48,28 @@ export default function AdminOrdersView() {
               <TableCell>In Process</TableCell>
               <TableCell>$1000</TableCell>
               <TableCell>
-                <Button>View Details</Button>
+                {/* ✅ Correct Dialog usage */}
+                <Dialog
+                  open={openDetailsDialog}
+                  onOpenChange={setOpenDetailsDialog}
+                >
+                  <DialogTrigger asChild>
+                    <Button onClick={() => setOpenDetailsDialog(true)}>
+                      View Details
+                    </Button>
+                  </DialogTrigger>
+
+                  <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                      <DialogTitle>Order Details</DialogTitle>
+                    </DialogHeader>
+
+                    {/* ✅ Your details component goes here */}
+                    <AdminOrderDetailsView
+                      onClose={() => setOpenDetailsDialog(false)}
+                    />
+                  </DialogContent>
+                </Dialog>
               </TableCell>
             </TableRow>
           </TableBody>
