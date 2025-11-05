@@ -8,7 +8,7 @@ import UserCartItemsContent from "./UserCartItemsContent";
 import { BrushCleaning, PackageIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-export default function UserCartWrapper() {
+export default function UserCartWrapper({ setOpenCartSheet }) {
   const dispatch = useDispatch();
   const { cartItems, isLoading } = useSelector((state) => state.shopCart);
   const { user } = useSelector((state) => state.auth);
@@ -74,7 +74,10 @@ export default function UserCartWrapper() {
           </div>
 
           <Button
-            onClick={() => navigate("/shop/checkout")}
+            onClick={() => {
+              navigate("/shop/checkout");
+              setOpenCartSheet(false);
+            }}
             className="w-full mt-6"
           >
             Check Out
