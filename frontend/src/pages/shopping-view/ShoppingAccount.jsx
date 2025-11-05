@@ -8,8 +8,8 @@ import img5 from "@/assets/Home-Page-Images/5.jpg";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // ✅ Import components
-import Orders from "@/components/shopping-view/Orders";
 import Address from "@/components/shopping-view/Address";
+import ShoppingOrders from "@/components/shopping-view/ShoppingOrders";
 
 export default function ShoppingAccount() {
   const images = [img1, img2, img3, img4, img5];
@@ -64,7 +64,7 @@ export default function ShoppingAccount() {
 
             {/* ✅ Render Components */}
             <TabsContent value="orders">
-              <Orders />
+              <ShoppingOrders />
             </TabsContent>
 
             <TabsContent value="address">
