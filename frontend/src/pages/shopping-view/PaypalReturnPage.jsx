@@ -59,7 +59,7 @@ export default function PaypalReturnPage() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[70vh] text-center space-y-3">
-      <Spinner className="size-10 text-blue-500" />
+      <Spinner className="w-12 h-12 text-black" /> {/* Spinner added */}
       <h2 className="text-lg font-semibold">Processing Payment...</h2>
       <p className="text-gray-500">
         Please don’t refresh or close this page while we confirm your payment.
