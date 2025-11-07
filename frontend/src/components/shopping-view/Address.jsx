@@ -22,10 +22,11 @@ const initialAddressFormData = {
   notes: "",
 };
 
-export default function Address() {
+export default function Address({ setCurrentSelectedAddress }) {
   const [formData, setFormData] = useState(initialAddressFormData);
   const [loading, setLoading] = useState(false);
   const [editingAddressId, setEditingAddressId] = useState(null);
+  const [selectedAddressId, setSelectedAddressId] = useState(null);
 
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
@@ -121,6 +122,11 @@ export default function Address() {
     return [address, phone, city, pincode].every((val) => val.trim() !== "");
   }
 
+  const handleSelectAddress = (address) => {
+    setSelectedAddressId(address._id);
+    setCurrentSelectedAddress(address); // update parent state
+  };
+
   return (
     <Card>
       {/* ✅ Saved addresses section */}
@@ -139,6 +145,8 @@ export default function Address() {
                 addressInfo={addr}
                 onEdit={() => handleEditAddress(addr)}
                 onDelete={() => handleDeleteAddress(addr._id)}
+                selectedAddressId={selectedAddressId}
+                setCurrentSelectedAddress={handleSelectAddress}
               />
             ))}
           </div>

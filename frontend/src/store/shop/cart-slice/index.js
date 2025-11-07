@@ -42,14 +42,23 @@ export const fetchCartItems = createAsyncThunk(
   async (userId, { rejectWithValue }) => {
     try {
       const response = await fetch(`${API_BASE}/cart/get/${userId}`);
+
+      // 🧩 If cart not found (after payment), just return empty cart gracefully
+      if (response.status === 404) {
+        console.info(
+          "🧺 Cart not found — returning empty array (cleared after checkout)."
+        );
+        return [];
+      }
+
+      // ✅ Only parse JSON if response has a body
       const data = await response.json();
 
       if (!response.ok) {
         return rejectWithValue(data?.message || "Failed to fetch cart");
       }
 
-      // return items array (keeps existing usage in components)
-      return data.cart.items;
+      return data.cart.items || [];
     } catch (error) {
       return rejectWithValue(error.message || "Network error");
     }

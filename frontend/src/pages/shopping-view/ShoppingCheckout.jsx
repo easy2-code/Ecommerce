@@ -11,11 +11,16 @@ import Address from "@/components/shopping-view/Address";
 import UserCartItemsContent from "@/components/shopping-view/UserCartItemsContent";
 import { fetchCartItems } from "@/store/shop/cart-slice";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { createNewOrder } from "@/store/shop/order-slice";
 
 export default function ShoppingCheckout() {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
   const { cartItems, isLoading } = useSelector((state) => state.shopCart);
+  const [currentSelectedAddress, setCurrentSelectedAddress] = useState(null);
+  const [isPaymentStart, setIsPaymentStart] = useState(false);
+  const { approvalURL } = useSelector((state) => state.shopOrder);
 
   const images = [img1, img2, img3, img4, img5];
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -29,9 +34,19 @@ export default function ShoppingCheckout() {
     return () => clearInterval(intervalRef.current);
   }, [images.length]);
 
-  // ✅ Fetch user's cart
+  // 📁 Pages/shopping-view/ShoppingCheckout.jsx - UPDATED useEffect
   useEffect(() => {
-    if (user?.id) dispatch(fetchCartItems(user.id));
+    if (user?.id) {
+      // ✅ ALWAYS fetch cart, but add a small delay on return from PayPal
+      if (window.location.href.includes("paypal-return")) {
+        // If returning from PayPal, wait a bit then fetch
+        setTimeout(() => {
+          dispatch(fetchCartItems(user.id));
+        }, 1000);
+      } else {
+        dispatch(fetchCartItems(user.id));
+      }
+    }
   }, [dispatch, user]);
 
   // ✅ Calculate total amount
@@ -45,10 +60,62 @@ export default function ShoppingCheckout() {
     }, 0);
   }, [cartItems]);
 
+  function handleInitialPaypalPaymnt() {
+    if (!currentSelectedAddress) {
+      toast.error("⚠️ Please select a shipping address before checkout!");
+      return;
+    }
+
+    // ✅ We need to fetch the actual cart to get the cart ID
+    // Since Redux only has cart items, we need to get the cart ID differently
+    const orderData = {
+      userId: user?.id,
+      // ❌ Remove cartId for now - we'll handle this differently
+      // cartId: cartItems?._id, // This was wrong - cartItems is array!
+      cartItems: cartItems.map((item) => ({
+        productId: item.productId._id || item.productId,
+        title: item.productId.title || item.title,
+        image: item.productId.image || item.image,
+        price:
+          item.productId.salePrice > 0
+            ? item.productId.salePrice
+            : item.productId.price,
+        quantity: item.quantity,
+      })),
+      addressInfo: {
+        addressId: currentSelectedAddress._id,
+        address: currentSelectedAddress.address,
+        city: currentSelectedAddress.city,
+        pincode: currentSelectedAddress.pincode,
+        phone: currentSelectedAddress.phone,
+        note: currentSelectedAddress.notes || "",
+      },
+      orderStatus: "pending",
+      paymentMethod: "paypal",
+      paymentStatus: "pending",
+      totalAmount,
+      orderDate: new Date(),
+      orderUpdateDate: new Date(),
+      paypalOrderId: "",
+    };
+
+    dispatch(createNewOrder(orderData)).then((data) => {
+      // console.log(data);
+      if (data?.payload.success) {
+        setIsPaymentStart(true);
+      } else {
+        setIsPaymentStart(false);
+      }
+    });
+  }
+
+  if (approvalURL) {
+    window.location.href = approvalURL;
+  }
   return (
     <div className="flex flex-col">
       {/* ✅ Slideshow */}
-      <div className="relative h-[400px] w-full overflow-hidden mb-10">
+      <div className="relative w-full h-screen overflow-hidden mb-10">
         {images.map((src, index) => (
           <img
             key={index}
@@ -78,9 +145,9 @@ export default function ShoppingCheckout() {
 
         <div className="flex flex-col lg:flex-row gap-10">
           {/* 🏠 Address Section (Left) */}
-          <div className="w-full lg:w-1/2 bg-gray-50 rounded-xl p-6 shadow-sm border">
+          <div className="w-full lg:w-1/1 bg-gray-50 rounded-xl p-6 shadow-sm border">
             <h2 className="text-xl font-semibold mb-4">Shipping Address</h2>
-            <Address />
+            <Address setCurrentSelectedAddress={setCurrentSelectedAddress} />
           </div>
 
           {/* 🛍️ Cart Section (Right) */}
@@ -111,6 +178,7 @@ export default function ShoppingCheckout() {
 
                   <Button
                     variant="outline"
+                    onClick={handleInitialPaypalPaymnt}
                     className="bg-yellow-400 hover:bg-yellow-500 text-black font-semibold rounded-lg flex items-center justify-center gap-2 py-2 px-4 transition"
                   >
                     <img

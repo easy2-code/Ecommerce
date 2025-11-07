@@ -64,21 +64,23 @@ export const addToCart = async (req, res) => {
   }
 };
 
-//  Fetch all items in a user's cart
-//  Populates the product details for each item
+// 🧩 Fetch all items in a user's cart
 export const fetchCartItems = async (req, res) => {
   try {
     const { userId } = req.params;
 
     const cart = await Cart.findOne({ userId }).populate({
       path: "items.productId",
-      select: "title price image description salePrice", // choose which fields you want
+      select: "title price image description salePrice",
     });
 
+    // ✅ If cart doesn't exist (e.g. after successful checkout),
+    // just return an empty array instead of a 404
     if (!cart) {
-      return res.status(404).json({
-        success: false,
-        message: "Cart not found",
+      return res.status(200).json({
+        success: true,
+        message: "Cart is empty (no cart found for this user)",
+        cart: { items: [] },
       });
     }
 
