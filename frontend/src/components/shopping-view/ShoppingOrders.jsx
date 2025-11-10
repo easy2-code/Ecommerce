@@ -94,6 +94,25 @@ export default function ShoppingOrders() {
     );
   };
 
+  const paymentBadgeBaseClass =
+    "text-white px-3 py-1 rounded-md shadow-md text-center inline-block min-w-[100px]";
+
+  const getBadgeColor = (status) => {
+    switch (status?.toLowerCase()) {
+      case "paid":
+        return "bg-green-500";
+      case "unpaid":
+      case "failed":
+        return "bg-red-500";
+      case "pending":
+        return "bg-yellow-500";
+      case "refunded":
+        return "bg-blue-500";
+      default:
+        return "bg-gray-400";
+    }
+  };
+
   // ✅ Pagination logic
   const totalPages = Math.ceil(orders.length / ordersPerPage);
   const startIndex = (currentPage - 1) * ordersPerPage;
@@ -124,6 +143,7 @@ export default function ShoppingOrders() {
                   <TableHead>Order ID</TableHead>
                   <TableHead>Order Date</TableHead>
                   <TableHead>Order Status</TableHead>
+                  <TableHead>Payment Status</TableHead>
                   <TableHead>Order Price</TableHead>
                   <TableHead>
                     <span className="sr-only">Details</span>
@@ -141,6 +161,15 @@ export default function ShoppingOrders() {
                         : "—"}
                     </TableCell>
                     <TableCell>{getStatusBadge(order.orderStatus)}</TableCell>
+                    <TableCell>
+                      <Badge
+                        className={`${getBadgeColor(
+                          order.paymentStatus
+                        )} ${paymentBadgeBaseClass}`}
+                      >
+                        {order.paymentStatus || "—"}
+                      </Badge>
+                    </TableCell>
                     <TableCell>
                       ${order.totalAmount || order.total_amount || 0}
                     </TableCell>

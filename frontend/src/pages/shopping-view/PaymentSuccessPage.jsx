@@ -31,11 +31,21 @@ export default function PaymentSuccessPage() {
   }, [dispatch, user, navigate]);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen text-green-600 gap-4">
+    // <div className="flex flex-col items-center justify-center min-h-screen text-green-600 gap-4">
+    //   <Spinner className="w-12 h-12 text-black" /> {/* Spinner added */}
+    //   <div>
+    //     <h2 className="text-lg font-semibold">
+    //       Payment Successful! Thank you for your order.
+    //     </h2>
+    //   </div>
+    //   <p className="text-gray-500">Redirecting you to your orders page...</p>
+    // </div>
+
+    <div className="flex flex-col items-center justify-center min-h-[70vh] text-center space-y-3">
       <Spinner className="w-12 h-12 text-black" /> {/* Spinner added */}
-      <div className="text-2xl font-semibold">
-        ✅ Payment Successful! Thank you for your order.
-      </div>
+      <h2 className="text-lg font-semibold">
+        Payment Successful! Thank you for your order.
+      </h2>
       <p className="text-gray-500">Redirecting you to your orders page...</p>
     </div>
   );
