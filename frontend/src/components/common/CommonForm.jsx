@@ -105,10 +105,11 @@ export default function CommonForm({
       case "select":
         return (
           <Select
+            key={formData[getControlItem.name]}
             onValueChange={(val) =>
               setFormData({ ...formData, [getControlItem.name]: val })
             }
-            value={value}
+            value={formData[getControlItem.name] || ""}
           >
             <SelectTrigger
               className={`w-full ${hasError ? "border-red-500" : ""}`}
