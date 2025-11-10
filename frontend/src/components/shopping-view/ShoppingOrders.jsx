@@ -48,7 +48,7 @@ export default function ShoppingOrders() {
           `http://localhost:3000/api/shop/order/list/${userId}`
         );
         const data = await response.json();
-        console.log(data);
+        // console.log(data);
 
         if (response.ok) {
           setOrders(data.orders || []);

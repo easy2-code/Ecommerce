@@ -13,6 +13,7 @@ import {
 import { toast } from "sonner";
 import { Button } from "../ui/button";
 import AddressCard from "../shopping-view/AddressCard";
+import { Spinner } from "../ui/spinner";
 
 const initialAddressFormData = {
   address: "",
@@ -136,7 +137,9 @@ export default function Address({ setCurrentSelectedAddress }) {
 
       <CardContent>
         {isLoading ? (
-          <p>Loading addresses...</p>
+          <div className="flex justify-center py-10">
+            <Spinner className="size-6" />
+          </div>
         ) : addressList.length > 0 ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
             {addressList.map((addr) => (
