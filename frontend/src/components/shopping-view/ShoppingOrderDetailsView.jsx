@@ -1,3 +1,4 @@
+// ShoppingOrderDetails.jsx
 import React from "react";
 import { Label } from "../ui/label";
 import { Badge } from "../ui/badge";

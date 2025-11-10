@@ -201,16 +201,18 @@ export const capturePayment = async (req, res) => {
     const userId = order.userId;
     await Cart.findOneAndDelete({ userId });
 
+    // ✅ Only update payment fields
     order.paymentStatus = "paid";
-    order.orderStatus = "confirmed";
     order.paymentId = paymentId;
     order.payerId = payerId;
+    order.orderUpdateDate = new Date();
 
+    // ⚠️ Keep orderStatus as it was (likely "pending")
     await order.save();
 
     res.status(200).json({
       success: true,
-      message: "Order confirmed and cart cleared",
+      message: "Payment captured successfully. Awaiting admin confirmation.",
       data: order,
     });
   } catch (error) {
