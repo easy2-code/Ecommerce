@@ -26,10 +26,7 @@ const PORT = process.env.PORT || 3000;
 // CORS Setup
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "https://loopmart-frontend.vercel.app", // <-- update with your actual Vercel domain
-    ],
+    origin: ["http://localhost:5173", "https://loopmart-lac.vercel.app/"],
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
     allowedHeaders: [
