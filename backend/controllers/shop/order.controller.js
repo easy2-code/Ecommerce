@@ -3,6 +3,8 @@ import { ordersController } from "../../helpers/paypal.js";
 import Order from "../../models/order.model.js";
 import Cart from "../../models/cart.model.js";
 
+const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
+
 export const createOrder = async (req, res) => {
   try {
     const {
@@ -122,8 +124,8 @@ export const createOrder = async (req, res) => {
           },
         ],
         applicationContext: {
-          returnUrl: "http://localhost:5173/shop/paypal-return",
-          cancelUrl: "http://localhost:5173/shop/paypal-cancel",
+          returnUrl: `${FRONTEND_URL}/shop/paypal-return`,
+          cancelUrl: `${FRONTEND_URL}/shop/paypal-cancel`,
           userAction: "PAY_NOW",
           shippingPreference: "NO_SHIPPING",
         },
