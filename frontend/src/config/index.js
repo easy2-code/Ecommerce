@@ -138,8 +138,8 @@ export const addProductFormElement = [
 export const shoppingViewHeaderMenuItem = [
   {
     id: "home",
-    label: "Home",
-    path: "/shop/home",
+    label: "All Products",
+    path: "/shop/listing",
   },
   {
     id: "men",
