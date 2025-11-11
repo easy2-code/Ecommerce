@@ -3,10 +3,15 @@ import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { SheetContent, SheetHeader, SheetTitle } from "../ui/sheet";
 import { Button } from "../ui/button";
-import { fetchCartItems } from "@/store/shop/cart-slice";
+import {
+  fetchCartItems,
+  updateCartItemQty,
+  deleteCartItem,
+} from "@/store/shop/cart-slice";
 import UserCartItemsContent from "./UserCartItemsContent";
 import { PackageIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 export default function UserCartWrapper({ setOpenCartSheet }) {
   const dispatch = useDispatch();
@@ -36,6 +41,57 @@ export default function UserCartWrapper({ setOpenCartSheet }) {
   // Total unique items
   const uniqueItemsCount = cartItems.length;
 
+  // Increment quantity with stock check
+  const handleIncrement = async (cartItem) => {
+    if (cartItem.quantity >= cartItem.productId.totalStock) {
+      toast.error("You have reached the maximum stock available! ❌");
+      return;
+    }
+
+    try {
+      await dispatch(
+        updateCartItemQty({
+          userId: user?.id,
+          productId: cartItem?.productId?._id,
+          quantity: cartItem.quantity + 1,
+        })
+      ).unwrap();
+    } catch (err) {
+      toast.error(err || "Failed to update quantity ❌");
+    }
+  };
+
+  // Decrement quantity
+  const handleDecrement = async (cartItem) => {
+    if (cartItem.quantity <= 1) return;
+    try {
+      await dispatch(
+        updateCartItemQty({
+          userId: user?.id,
+          productId: cartItem.productId._id,
+          quantity: cartItem.quantity - 1,
+        })
+      ).unwrap();
+    } catch (err) {
+      toast.error(err || "Failed to update quantity ❌");
+    }
+  };
+
+  // Delete cart item
+  const handleDelete = async (cartItem) => {
+    try {
+      await dispatch(
+        deleteCartItem({
+          userId: user?.id,
+          productId: cartItem.productId._id,
+        })
+      ).unwrap();
+      toast.success("Item removed from cart ✅");
+    } catch (err) {
+      toast.error(err || "Failed to remove item ❌");
+    }
+  };
+
   return (
     <SheetContent
       className="w-[330px] sm:w-auto max-w-md sm:max-w-lg md:max-w-xl p-6 bg-white shadow-md"
@@ -43,7 +99,6 @@ export default function UserCartWrapper({ setOpenCartSheet }) {
     >
       <SheetHeader>
         <SheetTitle className="text-lg font-semibold">Your Cart</SheetTitle>
-        {/* Display both unique and total quantity */}
         {cartItems.length > 0 && (
           <p className="text-sm text-gray-500 mt-1">
             {uniqueItemsCount} unique item{uniqueItemsCount > 1 ? "s" : ""},{" "}
@@ -62,7 +117,13 @@ export default function UserCartWrapper({ setOpenCartSheet }) {
       ) : (
         <div className="mt-8 max-h-[400px] overflow-y-auto pr-2 space-y-4">
           {cartItems.map((item) => (
-            <UserCartItemsContent key={item._id} cartItem={item} />
+            <UserCartItemsContent
+              key={item._id}
+              cartItem={item}
+              handleIncrement={() => handleIncrement(item)}
+              handleDecrement={() => handleDecrement(item)}
+              handleDelete={() => handleDelete(item)}
+            />
           ))}
         </div>
       )}

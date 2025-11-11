@@ -98,7 +98,6 @@ export const fetchCartItems = async (req, res) => {
 };
 
 //  Update the quantity of a specific cart item
-//  If quantity <= 0, remove the item from the cart
 export const updateCartItemQty = async (req, res) => {
   try {
     const { userId, productId, quantity } = req.body;
@@ -110,7 +109,7 @@ export const updateCartItemQty = async (req, res) => {
       });
     }
 
-    const cart = await Cart.findOne({ userId });
+    const cart = await Cart.findOne({ userId }).populate("items.productId");
 
     if (!cart) {
       return res.status(404).json({
@@ -120,13 +119,23 @@ export const updateCartItemQty = async (req, res) => {
     }
 
     const itemIndex = cart.items.findIndex(
-      (item) => item.productId.toString() === productId
+      (item) => item.productId._id.toString() === productId
     );
 
     if (itemIndex === -1) {
       return res.status(404).json({
         success: false,
         message: "Product not found in cart",
+      });
+    }
+
+    const product = cart.items[itemIndex].productId;
+
+    // ✅ Stock check
+    if (quantity > product.totalStock) {
+      return res.status(400).json({
+        success: false,
+        message: `You can only add up to ${product.totalStock} of this product.`,
       });
     }
 
@@ -138,10 +147,9 @@ export const updateCartItemQty = async (req, res) => {
 
     await cart.save();
 
-    // ✅ Repopulate product details
     const populatedCart = await Cart.findById(cart._id).populate({
       path: "items.productId",
-      select: "title price image description salePrice",
+      select: "title price image description salePrice totalStock",
     });
 
     res.status(200).json({
