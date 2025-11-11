@@ -1,6 +1,8 @@
 // store/admin/order-slice/index.js
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL; // ✅ Use .env
+
 const initialState = {
   isLoading: false,
   orderList: [],
@@ -13,12 +15,9 @@ export const getAllOrdersForAdmin = createAsyncThunk(
   "adminOrder/getAllOrdersForAdmin",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await fetch(
-        `http://localhost:3000/api/admin/orders/get`,
-        {
-          method: "GET",
-        }
-      );
+      const response = await fetch(`${API_BASE_URL}/api/admin/orders/get`, {
+        method: "GET",
+      });
 
       const data = await response.json();
 
@@ -39,7 +38,7 @@ export const getOrderDetailsForAdmin = createAsyncThunk(
   async (orderId, { rejectWithValue }) => {
     try {
       const response = await fetch(
-        `http://localhost:3000/api/admin/orders/details/${orderId}`,
+        `${API_BASE_URL}/api/admin/orders/details/${orderId}`,
         { method: "GET" }
       );
 
@@ -62,7 +61,7 @@ export const updateOrderStatusForAdmin = createAsyncThunk(
   async ({ orderId, status }, { rejectWithValue }) => {
     try {
       const response = await fetch(
-        `http://localhost:3000/api/admin/orders/update/${orderId}`,
+        `${API_BASE_URL}/api/admin/orders/update/${orderId}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },

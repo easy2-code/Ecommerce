@@ -1,5 +1,8 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 
+// ✅ Use environment variable for base URL
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 const initialState = {
   isAuthenticated: false,
   isLoading: true,
@@ -12,7 +15,7 @@ export const registerUser = createAsyncThunk(
   "auth/registerUser",
   async (formData, { rejectWithValue }) => {
     try {
-      const response = await fetch("http://localhost:3000/api/auth/register", {
+      const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
@@ -40,7 +43,7 @@ export const loginUser = createAsyncThunk(
   "auth/login",
   async (formData, { rejectWithValue }) => {
     try {
-      const response = await fetch("http://localhost:3000/api/auth/login", {
+      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
@@ -69,7 +72,7 @@ export const logoutUserThunk = createAsyncThunk(
   "auth/logoutUserThunk",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await fetch("http://localhost:3000/api/auth/logout", {
+      const response = await fetch(`${API_BASE_URL}/api/auth/logout`, {
         method: "POST",
         credentials: "include", // include cookies
       });
@@ -92,13 +95,10 @@ export const checkAuth = createAsyncThunk(
   "auth/checkAuth",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await fetch(
-        "http://localhost:3000/api/auth/check-auth",
-        {
-          method: "GET",
-          credentials: "include",
-        }
-      );
+      const response = await fetch(`${API_BASE_URL}/api/auth/check-auth`, {
+        method: "GET",
+        credentials: "include",
+      });
 
       // Handle no session gracefully
       if (response.status === 401) {

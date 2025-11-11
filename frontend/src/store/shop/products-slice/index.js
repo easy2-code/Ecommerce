@@ -1,6 +1,9 @@
 // shop/products-slice/index.js
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 
+// ✅ Use environment variable for API base URL
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 const initialState = {
   productList: [],
   productDetails: null,
@@ -31,7 +34,7 @@ export const fetchAllFilteredProducts = createAsyncThunk(
       if (sort) query.append("sort", sort);
 
       const response = await fetch(
-        `http://localhost:3000/api/shop/products/all?${query.toString()}`,
+        `${API_BASE_URL}/api/shop/products/all?${query.toString()}`,
         { signal } // ✅ attach signal for abort support
       );
 
@@ -55,7 +58,7 @@ export const fetchProductDetails = createAsyncThunk(
   async (id, { signal, rejectWithValue }) => {
     try {
       const response = await fetch(
-        `http://localhost:3000/api/shop/products/get/${id}`,
+        `${API_BASE_URL}/api/shop/products/get/${id}`,
         { signal }
       );
       const data = await response.json();

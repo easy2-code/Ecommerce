@@ -1,6 +1,9 @@
 // shop/order-slice/index.js
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 
+// ✅ Use environment variable for API base URL
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 const initialState = {
   approvalURL: null,
   isLoading: false,
@@ -17,15 +20,12 @@ export const createNewOrder = createAsyncThunk(
   "order/createNewOrder",
   async (orderData, { rejectWithValue }) => {
     try {
-      const response = await fetch(
-        "http://localhost:3000/api/shop/order/create",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify(orderData),
-        }
-      );
+      const response = await fetch(`${API_BASE_URL}/api/shop/order/create`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(orderData),
+      });
 
       if (!response.ok) {
         const error = await response.json();
@@ -45,14 +45,11 @@ export const capturePayment = createAsyncThunk(
   "order/capturePayment",
   async ({ orderId, paymentId, payerId }, { rejectWithValue }) => {
     try {
-      const response = await fetch(
-        "http://localhost:3000/api/shop/order/capture",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ orderId, paymentId, payerId }),
-        }
-      );
+      const response = await fetch(`${API_BASE_URL}/api/shop/order/capture`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId, paymentId, payerId }),
+      });
 
       if (!response.ok) {
         const error = await response.json();
@@ -73,7 +70,7 @@ export const getAllOrderByUser = createAsyncThunk(
   async (userId, { rejectWithValue }) => {
     try {
       const response = await fetch(
-        `http://localhost:3000/api/shop/order/list/${userId}`,
+        `${API_BASE_URL}/api/shop/order/list/${userId}`,
         { method: "GET" }
       );
 
@@ -96,7 +93,7 @@ export const getOrderDetails = createAsyncThunk(
   async (orderId, { rejectWithValue }) => {
     try {
       const response = await fetch(
-        `http://localhost:3000/api/shop/details/${orderId}`,
+        `${API_BASE_URL}/api/shop/order/details/${orderId}`,
         { method: "GET" }
       );
 

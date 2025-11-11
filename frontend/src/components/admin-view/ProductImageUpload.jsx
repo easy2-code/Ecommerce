@@ -17,6 +17,8 @@ export default function ProductImageUpload({
 }) {
   const inputRef = useRef(null);
 
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL; // ✅ Dynamic backend URL
+
   // 📂 Handles file selection from the system file picker
   function handleImageFileChange(event) {
     const selectedFiles = Array.from(event.target.files);
@@ -74,7 +76,7 @@ export default function ProductImageUpload({
 
       try {
         const response = await fetch(
-          "http://localhost:3000/api/admin/products/upload-image",
+          `${API_BASE_URL}/api/admin/products/upload-image`,
           { method: "POST", body: formData }
         );
         const data = await response.json();

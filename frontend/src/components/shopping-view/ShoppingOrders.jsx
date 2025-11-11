@@ -33,6 +33,8 @@ export default function ShoppingOrders() {
   const ordersPerPage = 10; // you can change it
   const { user } = useSelector((state) => state.auth);
 
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL; // ✅ Use environment variable
+
   useEffect(() => {
     const fetchOrders = async () => {
       const userId = user?.id || user?._id;
@@ -45,7 +47,7 @@ export default function ShoppingOrders() {
 
       try {
         const response = await fetch(
-          `http://localhost:3000/api/shop/order/list/${userId}`
+          `${API_BASE_URL}/api/shop/order/list/${userId}`
         );
         const data = await response.json();
         // console.log(data);

@@ -1,5 +1,8 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 
+// ✅ Use environment variable for API base URL
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 const initialState = {
   isLoading: false,
   addressList: [],
@@ -11,16 +14,13 @@ export const addNewAddress = createAsyncThunk(
   "address/addNewAddress",
   async (formData, { rejectWithValue }) => {
     try {
-      const response = await fetch(
-        "http://localhost:3000/api/shop/address/add",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(formData),
-        }
-      );
+      const response = await fetch(`${API_BASE_URL}/api/shop/address/add`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
 
       const data = await response.json();
 
@@ -40,7 +40,7 @@ export const fetchAllAddresses = createAsyncThunk(
   async (userId, { rejectWithValue }) => {
     try {
       const response = await fetch(
-        `http://localhost:3000/api/shop/address/get/${userId}`
+        `${API_BASE_URL}/api/shop/address/get/${userId}`
       );
 
       const data = await response.json();
@@ -61,7 +61,7 @@ export const editAddress = createAsyncThunk(
   async ({ userId, addressId, updates }, { rejectWithValue }) => {
     try {
       const response = await fetch(
-        `http://localhost:3000/api/shop/address/update/${userId}/${addressId}`,
+        `${API_BASE_URL}/api/shop/address/update/${userId}/${addressId}`,
         {
           method: "PUT",
           headers: {
@@ -89,7 +89,7 @@ export const deleteAddress = createAsyncThunk(
   async ({ userId, addressId }, { rejectWithValue }) => {
     try {
       const response = await fetch(
-        `http://localhost:3000/api/shop/address/delete/${userId}/${addressId}`,
+        `${API_BASE_URL}/api/shop/address/delete/${userId}/${addressId}`,
         {
           method: "DELETE",
         }

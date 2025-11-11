@@ -1,6 +1,9 @@
 // store/admin/products-slice/index.js
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 
+// ✅ Use environment variable
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 const initialState = {
   isLoading: false,
   productList: [],
@@ -12,16 +15,13 @@ export const addNewProduct = createAsyncThunk(
   "adminProducts/addNewProduct",
   async (formData, { rejectWithValue }) => {
     try {
-      const response = await fetch(
-        "http://localhost:3000/api/admin/products/add",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(formData),
-        }
-      );
+      const response = await fetch("${API_BASE_URL}/api/admin/products/add", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
 
       const data = await response.json();
 
@@ -40,9 +40,7 @@ export const fetchAllProducts = createAsyncThunk(
   "adminProducts/fetchAllProducts",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await fetch(
-        "http://localhost:3000/api/admin/products/all"
-      );
+      const response = await fetch(`${API_BASE_URL}/api/admin/products/all`);
       const data = await response.json();
 
       if (!response.ok)
@@ -61,7 +59,7 @@ export const editProduct = createAsyncThunk(
   async ({ id, updates }, { rejectWithValue }) => {
     try {
       const response = await fetch(
-        `http://localhost:3000/api/admin/products/edit/${id}`,
+        `${API_BASE_URL}/api/admin/products/edit/${id}`,
         {
           method: "PUT",
           headers: {
@@ -89,7 +87,7 @@ export const deleteProduct = createAsyncThunk(
   async (id, { rejectWithValue }) => {
     try {
       const response = await fetch(
-        `http://localhost:3000/api/admin/products/delete/${id}`,
+        `${API_BASE_URL}/api/admin/products/delete/${id}`,
         {
           method: "DELETE",
         }

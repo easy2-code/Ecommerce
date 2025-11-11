@@ -1,7 +1,8 @@
 // shop/cart-slice/index.js
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 
-const API_BASE = "http://localhost:3000/api/shop";
+// ✅ Use environment variable for API base URL
+const API_BASE = import.meta.env.VITE_API_BASE_URL + "/shop";
 
 const initialState = {
   cartItems: [],
