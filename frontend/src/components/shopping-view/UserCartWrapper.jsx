@@ -5,7 +5,7 @@ import { SheetContent, SheetHeader, SheetTitle } from "../ui/sheet";
 import { Button } from "../ui/button";
 import { fetchCartItems } from "@/store/shop/cart-slice";
 import UserCartItemsContent from "./UserCartItemsContent";
-import { BrushCleaning, PackageIcon } from "lucide-react";
+import { PackageIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export default function UserCartWrapper({ setOpenCartSheet }) {
@@ -30,11 +30,11 @@ export default function UserCartWrapper({ setOpenCartSheet }) {
     return sum + price * item.quantity;
   }, 0);
 
-  // Calculate total quantity of all items
-  const totalItemsCount = cartItems.reduce(
-    (sum, item) => sum + item.quantity,
-    0
-  );
+  // Total quantity of all items
+  const totalQuantity = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+
+  // Total unique items
+  const uniqueItemsCount = cartItems.length;
 
   return (
     <SheetContent
@@ -43,10 +43,11 @@ export default function UserCartWrapper({ setOpenCartSheet }) {
     >
       <SheetHeader>
         <SheetTitle className="text-lg font-semibold">Your Cart</SheetTitle>
-        {/* Total items count */}
+        {/* Display both unique and total quantity */}
         {cartItems.length > 0 && (
           <p className="text-sm text-gray-500 mt-1">
-            {totalItemsCount} item{totalItemsCount > 1 ? "s" : ""} in cart
+            {uniqueItemsCount} unique item{uniqueItemsCount > 1 ? "s" : ""},{" "}
+            {totalQuantity} item{totalQuantity > 1 ? "s" : ""} in cart
           </p>
         )}
       </SheetHeader>
