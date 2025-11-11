@@ -6,8 +6,6 @@ import AuthLayout from "./components/auth/AuthLayout";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 
-import Home from "./pages/home";
-
 // Admin
 import AdminLayout from "./components/admin-view/AdminLayout";
 import AdminDashboard from "./pages/admin-view/AdminDashboard";
@@ -32,6 +30,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import Footer from "./components/common/Footer";
 import PaypalReturnPage from "./pages/shopping-view/PaypalReturnPage";
 import PaymentSuccessPage from "./pages/shopping-view/PaymentSuccessPage";
+import Home from "./pages/Home";
 
 export default function App() {
   const { isAuthenticated, user, isLoading } = useSelector(
