@@ -3,7 +3,10 @@ import { ordersController } from "../../helpers/paypal.js";
 import Order from "../../models/order.model.js";
 import Cart from "../../models/cart.model.js";
 
-const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
+const FRONTEND_URL =
+  process.env.NODE_ENV === "production"
+    ? process.env.FRONTEND_URL
+    : "http://localhost:5173";
 
 export const createOrder = async (req, res) => {
   try {
