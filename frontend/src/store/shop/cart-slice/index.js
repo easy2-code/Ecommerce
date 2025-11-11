@@ -2,7 +2,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 
 // ✅ Use environment variable for API base URL
-const API_BASE = import.meta.env.VITE_API_BASE_URL + "/shop";
+const API_BASE = import.meta.env.VITE_API_BASE_URL + "/api/shop";
 
 const initialState = {
   cartItems: [],
