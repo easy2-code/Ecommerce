@@ -22,17 +22,18 @@ export default function ShoppingOrderDetailsView({ order }) {
 
   const getBadgeColor = (status) => {
     if (!status) return "bg-gray-500";
-    const map = {
-      confirmed: "bg-green-500",
-      pending: "bg-yellow-400",
-      cancelled: "bg-red-500",
-      shipped: "bg-blue-500",
-      delivered: "bg-teal-500",
-      processing: "bg-orange-500",
-      paid: "bg-green-600",
-      unpaid: "bg-red-600",
+
+    const statusMap = {
+      pending: "bg-yellow-500", // Pending → Yellow
+      "in process": "bg-orange-500", // In Process → Orange
+      "in shipping": "bg-blue-500", // In Shipping → Blue
+      rejected: "bg-red-500", // Rejected → Red
+      delivered: "bg-green-500", // Delivered → Green
+      paid: "bg-green-600", // Payment Paid → Dark Green
+      unpaid: "bg-red-600", // Payment Unpaid → Dark Red
     };
-    return map[status.toLowerCase()] || "bg-gray-500";
+
+    return statusMap[status.toLowerCase()] || "bg-gray-500";
   };
 
   return (

@@ -56,6 +56,33 @@ export const getOrderDetailsForAdmin = createAsyncThunk(
   }
 );
 
+// 🧩 Update order status
+export const updateOrderStatusForAdmin = createAsyncThunk(
+  "adminOrder/updateOrderStatusForAdmin",
+  async ({ orderId, status }, { rejectWithValue }) => {
+    try {
+      const response = await fetch(
+        `http://localhost:3000/api/admin/orders/update/${orderId}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to update order status");
+      }
+
+      return data.data;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
 export const adminOrderSlice = createSlice({
   name: "adminOrder",
   initialState,
@@ -87,6 +114,21 @@ export const adminOrderSlice = createSlice({
         state.orderDetails = action.payload;
       })
       .addCase(getOrderDetailsForAdmin.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
+      });
+
+    builder
+      // ✅ Update order status
+      .addCase(updateOrderStatusForAdmin.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(updateOrderStatusForAdmin.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.orderDetails = action.payload; // update with new data
+      })
+      .addCase(updateOrderStatusForAdmin.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload;
       });

@@ -47,19 +47,20 @@ export default function AdminOrdersView() {
   const getStatusBadge = (status) => {
     const baseClass =
       "text-white px-3 py-1 rounded-md shadow-md text-center inline-block min-w-[100px]";
+
     if (!status)
       return <Badge className={`bg-gray-500 ${baseClass}`}>Unknown</Badge>;
 
     const statusColors = {
-      confirmed: "bg-green-500",
-      pending: "bg-yellow-500",
-      cancelled: "bg-red-500",
-      shipped: "bg-blue-500",
-      delivered: "bg-teal-500",
-      processing: "bg-orange-500",
+      pending: "bg-yellow-500", // Pending → Yellow
+      "in process": "bg-orange-500", // In Process → Orange
+      "in shipping": "bg-blue-500", // In Shipping → Blue
+      rejected: "bg-red-500", // Rejected → Red
+      delivered: "bg-green-500", // Delivered → Green
     };
 
     const colorClass = statusColors[status.toLowerCase()] || "bg-gray-500";
+
     return (
       <Badge className={`${colorClass} ${baseClass}`}>
         {status.charAt(0).toUpperCase() + status.slice(1)}
@@ -160,12 +161,20 @@ export default function AdminOrdersView() {
             {selectedOrder && (
               <Dialog
                 open={openDetailsDialog}
-                onOpenChange={() => setOpenDetailsDialog(false)}
+                onOpenChange={(open) => {
+                  if (!open) {
+                    setOpenDetailsDialog(false);
+                    setSelectedOrder(null);
+                  }
+                }}
               >
                 <DialogContent className="sm:max-w-[750px] bg-gradient-to-br from-white to-gray-50 shadow-2xl p-8 rounded-3xl">
                   <AdminOrderDetailsView
                     order={selectedOrder}
-                    onClose={() => setOpenDetailsDialog(false)}
+                    onClose={() => {
+                      setOpenDetailsDialog(false);
+                      setSelectedOrder(null);
+                    }}
                   />
                 </DialogContent>
               </Dialog>

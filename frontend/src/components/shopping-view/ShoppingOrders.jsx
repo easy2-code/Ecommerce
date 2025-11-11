@@ -67,25 +67,21 @@ export default function ShoppingOrders() {
 
   const getStatusBadge = (status) => {
     const baseClass =
-      "text-white px-3 py-1 rounded-md shadow-md text-center inline-block min-w-[100px]"; // ✅ uniform width
+      "text-white px-3 py-1 rounded-md shadow-md text-center inline-block min-w-[100px]";
 
     if (!status) {
       return <Badge className={`bg-gray-500 ${baseClass}`}>Unknown</Badge>;
     }
 
-    const normalizedStatus = status.toLowerCase();
-
-    const statusColors = {
-      confirmed: "bg-green-500",
-      pending: "bg-yellow-500",
-      cancelled: "bg-red-500",
-      shipped: "bg-blue-500",
-      delivered: "bg-teal-500",
-      processing: "bg-orange-500",
+    const statusMap = {
+      pending: "bg-yellow-500", // Pending → Yellow
+      "in process": "bg-orange-500", // In Process → Orange
+      "in shipping": "bg-blue-500", // In Shipping → Blue
+      rejected: "bg-red-500", // Rejected → Red
+      delivered: "bg-green-500", // Delivered → Green
     };
 
-    // ✅ fallback to gray if not defined in the map
-    const colorClass = statusColors[normalizedStatus] || "bg-gray-500";
+    const colorClass = statusMap[status.toLowerCase()] || "bg-gray-500";
 
     return (
       <Badge className={`${colorClass} ${baseClass}`}>
