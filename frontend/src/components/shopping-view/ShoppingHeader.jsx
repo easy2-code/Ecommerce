@@ -97,7 +97,7 @@ function HeaderRightContent() {
           <span className="sr-only">User cart</span>
 
           <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-            {cartItems?.reduce((total, item) => total + item.quantity, 0) || 0}
+            {cartItems?.length || 0}
           </span>
         </Button>
 
