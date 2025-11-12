@@ -28,28 +28,8 @@ export default function Footer() {
               </a>
             </li>
             <li>
-              <a href="/about" className="hover:text-black">
-                About
-              </a>
-            </li>
-            <li>
               <a href="/auth/login" className="hover:text-black">
                 Sign In
-              </a>
-            </li>
-            <li>
-              <a href="/auth/register" className="hover:black">
-                Sign Up
-              </a>
-            </li>
-            <li>
-              <a href="/projects" className="hover:text-black">
-                Projects
-              </a>
-            </li>
-            <li>
-              <a href="/contact" className="hover:text-black">
-                Contact Me
               </a>
             </li>
           </ul>
